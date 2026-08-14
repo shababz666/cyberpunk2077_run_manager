@@ -332,9 +332,9 @@ setTimeout(function(){
         <p><span class="text-slate-300">What this is.</span> A companion for one Cyberpunk 2077 playthrough. You mirror your real decisions here as you make them, and it tells you what each one just opened or closed — which endings are still reachable, which iconic weapons have become unobtainable, which romances your body type and voice allow, and which quests are about to expire.</p>
         <p><span class="text-slate-300">How to use it while playing.</span> Keep it open on a second screen — a phone or tablet beside you beats pausing and alt-tabbing. After each significant choice in-game, click the matching one here. That is the whole loop.</p>
         <p><span class="text-slate-300">Choices are one-shot.</span> You cannot re-click a choice. To change your mind, use the <span class="text-cy">↺ rewind</span> control on any earlier card — it recalculates the entire run from scratch, so nothing stale is left behind. Rewinding is safe and is the intended way to explore.</p>
-        <p><span class="text-slate-300">Nothing leaves your device.</span> This is a single self-contained file with no server, no account and no network use at all. Your run saves in this browser only. To move it to another device, use <span class="text-cy">Copy JSON</span> here and <span class="text-cy">Paste JSON</span> there.</p>
+        <p><span class="text-slate-300">Nothing leaves your device.</span> There is no account and no server storing anything — your run saves in this browser only and is never uploaded. To carry it to another device, use <span class="text-cy">Copy JSON</span> here and <span class="text-cy">Paste JSON</span> there.</p>
         <p><span class="text-slate-300">Spoilers.</span> It names quests, characters and outcomes throughout. That is unavoidable for a tool whose job is warning you about what you are about to lose.</p>
-        <p><span class="text-slate-300">Using it on a phone.</span> iPhone needs one extra step: tapping the file in Files opens a preview that blocks JavaScript, so nothing loads. Put the file on any free static host and open that link in Safari instead — <span class="text-neon">Help</span> has the details. Android opens local files in Chrome without any of this.</p>
+        <p><span class="text-slate-300">Keep it one tap away.</span> On iPhone, Safari's <span class="text-cy">Share → Add to Home Screen</span> makes this launch like an installed app; on Android it is Chrome's <span class="text-cy">Add to Home screen</span>. Best used on a phone beside you while you play.</p>
         <p class="text-slate-500">The full manual is behind the <span class="text-neon">Help</span> button in the header once your run starts.</p>
       </div>
     </div>
@@ -515,32 +515,27 @@ setTimeout(function(){
         </section>
 
         <section>
-          <h3 class="text-neon text-[11px] mb-1">OPENING THE FILE</h3>
-          <p>One self-contained HTML file. No install, no server, no account, and no network use whatsoever — the styling and fonts are inside the file, so it renders identically offline, from a USB stick, or in airplane mode.</p>
+          <h3 class="text-neon text-[11px] mb-1">ACCESS &amp; INSTALLING IT</h3>
+          <p>A static web app — no account, no tracking, and no server-side anything. The page you are reading is the whole product.</p>
 
-          <p class="mt-2 text-slate-300">On a computer</p>
-          <p>Save the file somewhere you will find it again, then double-click it, or drag it onto any open browser tab. Bookmark it once it opens so you are not hunting for it mid-session.</p>
-
-          <p class="mt-2 text-slate-300">On iPhone or iPad — read this before you try</p>
-          <p>Tapping the file in the <span class="text-cy">Files</span> app <span class="text-pink">will not work</span>, and this is worth understanding rather than fighting. Files opens HTML in Apple's Quick Look preview, which disables JavaScript for security. There is no setting to turn it back on. Mobile Safari also cannot open a local <code class="text-cy">file://</code> path. So on iPhone the app needs a real web address.</p>
-          <p class="mt-1">Symptoms of hitting this: a black screen, or the page appearing as plain unstyled text. Both mean scripts are not running, not that the file is damaged.</p>
-          <p class="mt-2">Two ways round it:</p>
+          <p class="mt-2 text-slate-300">Keep it one tap away</p>
           <ul class="mt-1 space-y-1">
-            <li>• <span class="text-slate-300">Host it once.</span> Drag the file onto <code class="text-cy">app.netlify.com/drop</code> or push it to GitHub Pages. Open the resulting link in Safari and choose <span class="text-cy">Share → Add to Home Screen</span>. It then launches like an installed app, and Safari caches it so it keeps working without signal.</li>
-            <li>• <span class="text-slate-300">Use a file manager with a real browser.</span> Apps such as Documents by Readdle run local HTML properly, JavaScript included.</li>
+            <li>• <span class="text-slate-300">iPhone / iPad</span> — in Safari, <span class="text-cy">Share → Add to Home Screen</span>. It then launches full-screen like an installed app, and Safari keeps a cached copy so it still opens on poor signal.</li>
+            <li>• <span class="text-slate-300">Android</span> — in Chrome, menu → <span class="text-cy">Add to Home screen</span>.</li>
+            <li>• <span class="text-slate-300">Desktop</span> — bookmark it, or use your browser's install-as-app option if it offers one.</li>
           </ul>
 
-          <p class="mt-2 text-slate-300">On Android</p>
-          <p>Simpler than iOS. Open the file from Files or Downloads and pick <span class="text-cy">Chrome</span> when asked which app to use — Chrome runs local files with scripts enabled. Avoid any "preview" option, which has the same limitation as iOS. Chrome's <span class="text-cy">Add to Home screen</span> then gives you an app-like launcher.</p>
-
           <p class="mt-2 text-slate-300">Where your run is stored</p>
-          <p>Automatically, in this browser on this device — nowhere else. The QA Panel reports the storage mode it is using. If it reads <span class="text-neon">MEMORY</span>, the browser has blocked persistent storage and your run will vanish on refresh, so copy or export the JSON before closing the tab. Note that each browser and each device keeps its own separate run; they do not sync on their own.</p>
+          <p>In this browser, on this device, and nowhere else — there is no server to send it to. The QA Panel shows which storage mode is in use. If it ever reads <span class="text-neon">MEMORY</span>, the browser has blocked persistent storage and the run will vanish when the tab closes, so copy the JSON out before then. Each browser and each device keeps its own separate run.</p>
+
+          <p class="mt-2 text-slate-300">Second screen beats alt-tabbing</p>
+          <p>The intended setup is this open on a phone or tablet beside you while you play, updated after each significant choice. Pausing the game to check a wiki costs far more attention than tapping one button here.</p>
         </section>
 
         <section>
           <h3 class="text-neon text-[11px] mb-1">MAKING IT FULLY OFFLINE</h3>
           <p>All layout, colour and logic are already inside this file — it works with no network. The two display typefaces are the single exception: they load from Google Fonts on first open, and without them the app falls back to the sharpest technical faces your device already has. It stays perfectly usable, just less distinctive.</p>
-          <p class="mt-2">To remove that last dependency, run this once <span class="text-slate-300">on a desktop browser while online</span> — it needs JavaScript, so it cannot be done from an iOS preview. It downloads the fonts, embeds them into a copy of this file, and strips the links. Host or transfer that copy and the type is correct everywhere, with no network at all.</p>
+          <p class="mt-2">If you want a copy that is genuinely dependency-free — for archiving, for a machine with no internet, or to host yourself — run this on a desktop browser. It downloads the fonts, embeds them into a copy of this page, and strips the remote links. That copy renders identically anywhere, offline included.</p>
           <div class="border border-cy/40 bg-cy/5 p-3 mt-3">
             <button id="bake-do" class="bg-cy text-void px-4 py-2 text-sm font-bold disabled:opacity-30">Bake fonts &amp; download offline copy</button>
             <p id="bake-status" class="text-[11px] text-slate-500 mt-2">Adds roughly 60–90 KB. Your current run is untouched — this only produces a new file.</p>
