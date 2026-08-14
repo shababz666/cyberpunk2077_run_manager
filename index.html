@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="cp2077-build" content="2026.08.14-r1">
 <!-- Type is progressive enhancement. If these never load — offline, from Files,
      on a plane — the fallback stacks below keep the same character. Nothing
      structural depends on the network; all layout and colour is inlined. -->
@@ -388,7 +389,7 @@ setTimeout(function(){
     <div class="max-w-[1600px] mx-auto px-3 sm:px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
       <h1 class="text-cy text-sm md:text-base">CP2077 <span class="text-neon">TACTICAL RUN MANAGER</span></h1>
       <span class="text-[10px] border border-edge px-2 py-1 text-slate-500">SCHEMA v3.1</span>
-      <span class="text-[10px] border border-edge px-2 py-1 text-slate-500">v3.1 · COMPLETE</span>
+      <span class="text-[10px] border border-edge px-2 py-1 text-slate-500">BUILD 2026.08.14-r1</span>
       <span id="store-mode" class="text-[10px] border border-edge px-2 py-1 text-slate-500"></span>
       <div class="ml-auto flex flex-wrap gap-2">
         <button id="btn-help"   class="text-xs border border-neon/60 text-neon px-3 py-1.5 hover:border-neon">Help</button>
@@ -420,9 +421,9 @@ setTimeout(function(){
         <div class="flex items-center gap-2">
           <h2 class="text-cy text-xs">TELEMETRY</h2>
           <span id="hud-peek" class="text-[10px] text-slate-500 lg:hidden ml-auto"></span>
-          <button id="hud-toggle" class="lg:hidden text-[10px] border border-edge px-2 py-1 hover:border-cy shrink-0">Show</button>
+          <button id="hud-toggle" class="lg:hidden text-[11px] border border-edge px-3 py-1 hover:border-cy shrink-0">Hide</button>
         </div>
-        <div id="hud-body" class="text-xs hidden lg:block mt-3"></div>
+        <div id="hud-body" class="text-xs mt-3"></div>
       </div>
     </aside>
   </main>
@@ -570,7 +571,7 @@ setTimeout(function(){
             <li>• <span class="text-slate-300">Romance</span> — four tracked arcs, each 0 to 4. Ones your body type and voice make impossible are marked LOCKED with the reason. Note that the <em>questlines</em> are almost always still completable; only the romance itself is gated.</li>
             <li>• <span class="text-slate-300">Ending availability</span> — OPEN means still reachable right now. It updates on every choice, so you can watch a route close in real time. Temperance is a final sub-choice inside Star, Sun or Reaper rather than a route of its own. Taking the Phantom Liberty cure marks every base ending LOCKED — Tower path taken.</li>
             <li>• <span class="text-slate-300">Two-gate flags</span> — the Reaper needs <code class="text-cy">reaperDialogue</code> from the Chippin' In oil-fields conversation and <code class="text-cy">reaperWait</code> from the rooftop wait. Either alone does nothing.</li>
-            <li>• On a narrow screen the panel is collapsed by default. The summary line shows affinity, arc counts and how many endings remain open; tap <span class="text-slate-300">Show</span> for the rest.</li>
+            <li>• <span class="text-slate-300">Arsenal</span> — a running count of iconics collected out of the total, a bar splitting them into have / recoverable / lost / still ahead, and a grouped list with anything needing action at the top. On a narrow screen you can tap <span class="text-slate-300">Hide</span> to fold the whole panel down to a one-line summary.</li>
           </ul>
         </section>
 
@@ -4076,9 +4077,6 @@ function renderHudInto(root, state) {
   root.appendChild(mk(identityHtml));
   root.appendChild(mk(`<div class="mt-3 mb-1 text-[11px] flex justify-between"><span class="text-slate-400">JOHNNY AFFINITY</span><span class="text-neon">${state.johnny.affinity} / ${state.johnny.cap}</span></div>
                        <div class="bar"><i style="background:#facc15;width:${pct}%"></i></div>`));
-  root.appendChild(mk(`<div class="mt-4 text-[11px] text-slate-400 mb-2">ROMANCE</div><div class="space-y-2">${rom}</div>`));
-  root.appendChild(mk(`<div class="mt-4 text-[11px] text-slate-400 mb-2">WORLD STATE</div><div class="flex flex-wrap gap-1">${world}</div>`));
-  root.appendChild(mk(`<div class="mt-4 text-[11px] text-slate-400 mb-2">ARCS</div><div class="flex flex-wrap gap-1">${arcs}</div>`));
   /* ── ARSENAL ──────────────────────────────────────────────────────
      A flat list of 19 rows answers "what is the status of X" but not
      "how am I doing", which is the question actually being asked. So:
@@ -4127,8 +4125,13 @@ function renderHudInto(root, state) {
     ${group("PENDING", "STILL AHEAD", "text-slate-600")}`
     : `<span class="text-[10px] text-slate-600">Registry empty.</span>`;
 
-  root.appendChild(mk(`<div class="mt-4 text-[11px] text-slate-400 mb-2">ARSENAL</div><div>${arsenal}</div>`));
+  /* Order matters: the two questions the tool exists to answer — what can I
+     still reach, and what have I lost — come before the supporting detail. */
   root.appendChild(mk(`<div class="mt-4 text-[11px] text-slate-400 mb-2">ENDING AVAILABILITY</div><div class="space-y-1">${endings}</div>`));
+  root.appendChild(mk(`<div class="mt-4 text-[11px] text-slate-400 mb-2">ARSENAL</div><div>${arsenal}</div>`));
+  root.appendChild(mk(`<div class="mt-4 text-[11px] text-slate-400 mb-2">ROMANCE</div><div class="space-y-2">${rom}</div>`));
+  root.appendChild(mk(`<div class="mt-4 text-[11px] text-slate-400 mb-2">ARCS</div><div class="flex flex-wrap gap-1">${arcs}</div>`));
+  root.appendChild(mk(`<div class="mt-4 text-[11px] text-slate-400 mb-2">WORLD STATE</div><div class="flex flex-wrap gap-1">${world}</div>`));
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
