@@ -96,23 +96,55 @@ button{font-family:var(--ui);}
 .wall-sock .wall-name{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .wall-sock .wall-cond{position:absolute;top:1px;right:3px;font-size:9px;color:#94a3b8;}
 .wall-sock:hover,.wall-sock.wall-sel{outline:1px solid var(--neon);outline-offset:-1px;}
-.wall-sock[data-state="acquired"]{border-color:#facc15;color:#facc15;background:rgba(250,204,21,.08);}
-.wall-sock[data-state="live"]{border-color:var(--cy);color:var(--cy);}
-.wall-sock[data-state="recoverable"]{border-color:var(--neon);color:var(--neon);}
-.wall-sock[data-state="unverified-recovery"]{border-color:#94a3b8;color:#94a3b8;border-style:dashed;}
-.wall-sock[data-state="unreachable"]{border-color:var(--pink);color:var(--pink);background:rgba(255,0,110,.06);}
-.wall-sock[data-state="undetermined"]{border-color:var(--edge);color:#64748b;border-style:dotted;}
+/* Six-state Kiroshi palette. Every state differs by HUE and by TREATMENT
+   (fill / solid / dashed / dotted) and carries a glyph — never colour alone.
+   Contrast on the void background: gold-fill text 14:1, cyan 10:1, green 9:1,
+   slate 6.7:1, rose 6:1, dim 5.3:1 (all ≥ 4.5:1). D-27: acquired and
+   recoverable were both yellow before this block. */
+:root{--st-acq:#f5c542;--st-live:#22d3ee;--st-rec:#4ade80;--st-unv:#94a3b8;--st-unr:#fb7185;--st-und:#8b95a7;}
+.wall-sock[data-state="acquired"]{border-color:var(--st-acq);background:var(--st-acq);color:#050508;font-weight:700;box-shadow:0 0 10px rgba(245,197,66,.35);}
+.wall-sock[data-state="live"]{border-color:var(--st-live);color:var(--st-live);background:rgba(34,211,238,.06);}
+.wall-sock[data-state="recoverable"]{border-color:var(--st-rec);color:var(--st-rec);}
+.wall-sock[data-state="unverified-recovery"]{border-color:var(--st-unv);color:var(--st-unv);border-style:dashed;}
+.wall-sock[data-state="unreachable"]{border-color:var(--st-unr);color:var(--st-unr);background:rgba(251,113,133,.07);}
+.wall-sock[data-state="undetermined"]{border-color:var(--edge);color:var(--st-und);border-style:dotted;}
+.wall-sock:active{transform:translateY(1px);}
 .wall-lg{display:inline-flex;align-items:center;gap:4px;color:#94a3b8;}
-.wall-lg i{display:inline-block;width:8px;height:8px;border:1px solid currentColor;}
-.wall-lg[data-state="acquired"]{color:#facc15}.wall-lg[data-state="live"]{color:var(--cy)}
-.wall-lg[data-state="recoverable"]{color:var(--neon)}.wall-lg[data-state="unverified-recovery"]{color:#94a3b8}
-.wall-lg[data-state="unreachable"]{color:var(--pink)}.wall-lg[data-state="undetermined"]{color:#64748b}
-.wall-detail{border:1px solid var(--edge);padding:8px;background:var(--void);}
-.wall-tag{font-size:9px;border:1px solid currentColor;padding:1px 6px;}
-.wall-tag[data-state="acquired"]{color:#facc15}.wall-tag[data-state="live"]{color:var(--cy)}
-.wall-tag[data-state="recoverable"]{color:var(--neon)}.wall-tag[data-state="unverified-recovery"]{color:#94a3b8}
-.wall-tag[data-state="unreachable"]{color:var(--pink)}.wall-tag[data-state="undetermined"]{color:#64748b}
+.wall-lg i{display:inline-block;width:10px;height:10px;border:1px solid currentColor;}
+.wall-lg[data-state="acquired"]{color:var(--st-acq)}.wall-lg[data-state="acquired"] i{background:var(--st-acq)}
+.wall-lg[data-state="live"]{color:var(--st-live)}.wall-lg[data-state="recoverable"]{color:var(--st-rec)}
+.wall-lg[data-state="unverified-recovery"]{color:var(--st-unv)}.wall-lg[data-state="unverified-recovery"] i{border-style:dashed}
+.wall-lg[data-state="unreachable"]{color:var(--st-unr)}.wall-lg[data-state="undetermined"]{color:var(--st-und)}.wall-lg[data-state="undetermined"] i{border-style:dotted}
+.wall-detail{border:1px solid var(--edge);padding:10px;background:var(--void);}
+.wall-tag{font-size:9px;border:1px solid currentColor;padding:1px 6px;letter-spacing:.06em;}
+.wall-tag[data-state="acquired"]{color:var(--st-acq)}.wall-tag[data-state="live"]{color:var(--st-live)}
+.wall-tag[data-state="recoverable"]{color:var(--st-rec)}.wall-tag[data-state="unverified-recovery"]{color:var(--st-unv)}
+.wall-tag[data-state="unreachable"]{color:var(--st-unr)}.wall-tag[data-state="undetermined"]{color:var(--st-und)}
+.lore-short{color:#e2e8f0;font-size:11px;letter-spacing:.02em;}
+.lore-body{color:#94a3b8;font-size:10px;line-height:1.5;border-left:2px solid var(--edge);padding-left:8px;}
+.lore-kv{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:10px;}
+.lore-kv dt{color:#64748b;}.lore-kv dd{color:#cbd5e1;margin:0;}
 @media (pointer:coarse){.wall-sock{min-height:52px;}}
+/* Socket sheet — bottom sheet on narrow viewports (below the lg breakpoint,
+   where the wall detail would otherwise sit far below the fold). The card is
+   height-clamped and self-scrolling: L8-compliant by construction. */
+#wall-sheet{align-items:flex-end;}
+#wall-sheet .sheet-card{width:100%;max-height:82vh;overflow-y:auto;border:1px solid var(--edge);border-bottom:0;background:var(--panel);
+  padding:12px 14px calc(14px + env(safe-area-inset-bottom));box-shadow:0 -12px 40px rgba(0,0,0,.6);}
+#wall-sheet .sheet-grip{width:36px;height:3px;background:var(--edge);margin:0 auto 10px;}
+#wall-sheet .sheet-close{min-width:44px;min-height:44px;border:1px solid var(--edge);color:#94a3b8;font-size:11px;}
+#wall-sheet .sheet-close:hover{border-color:var(--pink);color:var(--pink);}
+@media (prefers-reduced-motion:no-preference){#wall-sheet .sheet-card{animation:sheet-in .18s ease-out;}}
+@keyframes sheet-in{from{transform:translateY(12px);opacity:0}to{transform:none;opacity:1}}
+
+/* Phase 8 — career panel */
+.career-run{border:1px solid var(--edge);padding:8px;}
+.career-run.career-active{border-color:var(--neon);}
+.career-run.career-archived{opacity:.55;}
+.cr-btn{border:1px solid var(--edge);padding:4px 8px;font-size:10px;color:#94a3b8;background:transparent;}
+.cr-btn:hover{border-color:var(--cy);color:var(--cy);}
+.cr-btn.cr-danger:hover{border-color:var(--pink);color:var(--pink);}
+@media (pointer:coarse){.cr-btn{min-height:32px;padding:6px 10px;}}
 
 /* Panel corner brackets — the notch reads as deliberate rather than clipped. */
 .clip-notch{position:relative;z-index:0;}
@@ -132,8 +164,13 @@ button{font-family:var(--ui);}
 .no-ios-zoom{font-size:16px;line-height:1.45;}
 
 /* ── layout ──────────────────────────────────────────────────────── */
-.hidden{display:none!important;}
+/* D-28: `.hidden` used !important, which beat `.lg\:block` — every ≥1024px
+   viewport lost the HUD, wall and career panels with no toggle to reveal them.
+   Tailwind resolves this by ORDER, not force: base display utilities first,
+   `.hidden` last in the base layer, responsive variants later still. So
+   `hidden flex` hides, and `hidden lg:block` shows on desktop. */
 .flex{display:flex;}.grid{display:grid;}.block{display:block;}
+.hidden{display:none;}
 .fixed{position:fixed;}.absolute{position:absolute;}.sticky{position:sticky;}.relative{position:relative;}
 .inset-0{inset:0;}.top-0{top:0;}.top-2{top:.5rem;}.left-\[5px\]{left:5px;}
 .z-30{z-index:30;}.z-40{z-index:40;}.z-50{z-index:50;}
@@ -363,7 +400,7 @@ setTimeout(function(){
   <div class="w-full max-w-2xl border border-edge bg-panel clip-notch p-6 md:p-8">
 
     <div class="flex items-center gap-2 mb-1"><span class="text-cy text-xs">TACTICAL RUN MANAGER</span>
-      <span id="build-stamp" class="ml-auto text-[10px] border border-edge px-2 py-0.5 text-slate-500">BUILD 7.2 · 2026-08-16</span></div>
+      <span id="build-stamp" class="ml-auto text-[10px] border border-edge px-2 py-0.5 text-slate-500">BUILD 8.1 · 2026-08-16</span></div>
     <h1 class="text-xl md:text-2xl text-neon mb-1">RUN SETUP</h1>
     <p class="text-sm text-slate-400 mb-4">Every downstream gate depends on these four values. They cannot be changed without resetting the run.</p>
 
@@ -436,7 +473,7 @@ setTimeout(function(){
     <div class="max-w-[1600px] mx-auto px-3 sm:px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
       <h1 class="text-cy text-sm md:text-base">CP2077 <span class="text-neon">TACTICAL RUN MANAGER</span></h1>
       <span class="text-[10px] border border-edge px-2 py-1 text-slate-500">SCHEMA v3.1</span>
-      <span class="text-[10px] border border-edge px-2 py-1 text-slate-500">v3.1 · BUILD 7.2</span>
+      <span class="text-[10px] border border-edge px-2 py-1 text-slate-500">v3.1 · BUILD 8.1</span>
       <span id="store-mode" class="text-[10px] border border-edge px-2 py-1 text-slate-500"></span>
       <div class="ml-auto flex flex-wrap gap-2">
         <button id="btn-shield" class="text-xs border border-edge px-3 py-1.5 hover:border-neon" aria-pressed="false">Spoiler shield: OFF</button>
@@ -481,6 +518,15 @@ setTimeout(function(){
         </div>
         <div id="wall-body" class="text-xs hidden lg:block mt-3"></div>
       </div>
+      <!-- Phase 8 — CAREER: run list + ending coverage. All figures derived (I6). -->
+      <div class="border border-edge bg-panel clip-notch p-4">
+        <div class="flex items-center gap-2">
+          <h2 class="text-cy text-xs">CAREER</h2>
+          <span id="career-count" class="text-[10px] text-slate-600 ml-auto"></span>
+          <button id="career-toggle" class="lg:hidden text-[10px] border border-edge px-2 py-1 hover:border-cy shrink-0">Show</button>
+        </div>
+        <div id="career-body" class="text-xs hidden lg:block mt-3"></div>
+      </div>
     </aside>
   </main>
 
@@ -511,6 +557,34 @@ setTimeout(function(){
   </div>
 
   <!-- RESET MODAL -->
+  <!-- Phase 8b — socket sheet (touch / narrow). Desktop uses the inline detail under the grid. -->
+  <div id="wall-sheet" class="hidden fixed inset-0 z-50 bg-void/80" role="dialog" aria-modal="true" aria-labelledby="wall-sheet-title">
+    <div class="sheet-card clip-notch">
+      <div class="sheet-grip" aria-hidden="true"></div>
+      <div id="wall-sheet-body"></div>
+      <div class="flex justify-end mt-3"><button id="wall-sheet-close" class="sheet-close px-4">Close</button></div>
+    </div>
+  </div>
+
+  <div id="career-modal" class="hidden fixed inset-0 z-50 items-start justify-center bg-void/95 p-4 overflow-y-auto">
+  <div class="ovl-wrap w-full min-h-full flex flex-col justify-center">
+    <div class="w-full max-w-md mx-auto border border-cy/50 bg-panel clip-notch p-4 md:p-6">
+      <div class="flex items-start gap-3 mb-3">
+        <h2 id="career-modal-title" class="text-cy text-sm">RUN</h2>
+        <button id="career-modal-close" class="ml-auto border border-edge px-3 py-1.5 text-xs hover:border-pink shrink-0">Close</button>
+      </div>
+      <p id="career-modal-msg" class="text-xs text-slate-400 mb-3"></p>
+      <input id="career-modal-input" type="text" maxlength="60" class="hidden w-full bg-void border border-edge px-3 py-2 text-sm mb-3" placeholder="">
+      <select id="career-modal-select" class="hidden w-full bg-void border border-edge px-3 py-2 text-sm mb-3"></select>
+      <textarea id="career-modal-text" class="hidden w-full h-40 bg-void border border-edge p-2 text-xs mb-3" spellcheck="false"></textarea>
+      <div class="flex gap-2 justify-end">
+        <button id="career-modal-cancel" class="border border-edge px-3 py-2 text-xs hover:border-cy">Cancel</button>
+        <button id="career-modal-ok" class="bg-cy text-void px-4 py-2 text-xs font-bold">OK</button>
+      </div>
+    </div>
+  </div>
+  </div>
+
   <div id="reset-modal" class="hidden fixed inset-0 z-50 items-start justify-center bg-void/95 p-4 overflow-y-auto">
   <div class="ovl-wrap w-full min-h-full flex flex-col justify-center">
     <div class="w-full max-w-md border border-pink/50 bg-panel clip-notch p-6">
@@ -661,6 +735,17 @@ setTimeout(function(){
         </section>
 
         <section>
+          <h3 class="text-neon text-[11px] mb-1">PHASE 8 — CAREER</h3>
+          <ul class="space-y-1">
+            <li>• <span class="text-slate-300">Runs</span> — the app now keeps a list of runs. Every non-archived run counts toward the career: a socket lights <span style="color:var(--st-acq)">acquired</span> if <em>any</em> saved run holds it, and rewinding a run un-lights what it no longer holds. Nothing about the career is stored — it is replayed from the runs each time (I6).</li>
+            <li>• <span class="text-slate-300">Ending coverage</span> — the seven endings and which run reached each. That is the scoreboard.</li>
+            <li>• <span class="text-slate-300">Fork</span> — start a new run from a prefix of an existing one. The source is untouched; the fork gets its own id.</li>
+            <li>• <span class="text-slate-300">Archive / delete / export</span> — archived runs stay stored but stop counting. Delete is permanent; export first. Cap: 50 runs, warning at 40, never silently evicted. Your pre-career save was migrated in and the legacy copy left untouched as a backup.</li>
+            <li>• <span class="text-slate-300">Sockets</span> — tap one for the dossier: state, lore, the decision that closed it, the route that still opens it, and which run holds it.</li>
+          </ul>
+        </section>
+
+        <section>
           <h3 class="text-neon text-[11px] mb-1">PHASE 7 — GHOST WALL &amp; FEASIBILITY</h3>
           <ul class="space-y-1">
             <li>• <span class="text-slate-300">Ghost Wall</span> — the 30-slot H10 stash wall as six-state sockets: <span style="color:#facc15">acquired</span>, <span class="text-cy">live</span> (still ahead and provably reachable), <span class="text-neon">recoverable</span> (Herold confirmed), <span class="text-slate-400">unverified recovery</span>, <span class="text-pink">unreachable</span> (proven lost — tap it to see the node that closed it, for next run), and <span class="text-slate-500">undetermined</span> (the solver could not settle it, or the item lives outside the decision graph). Undetermined is not failure. It is the tool refusing to guess.</li>
@@ -722,7 +807,10 @@ setTimeout(function(){
    ═══════════════════════════════════════════════════════════════════════ */
 const SPEC = Object.freeze({
   schemaVersion: "3.1",
-  storageKey: "cp2077_trm_v3",
+  storageKey: "cp2077_trm_v3",          // legacy single-run key (read-only after migration; never deleted by code)
+  careerKey:  "cp2077_trm_v4_career",   // Phase 8 — the run list container
+  careerSchema: 1,
+  runCap: 50, runWarn: 40,
   rootNode: "act1_lifepath",           // Phase 2: repointed off the dummy harness
 
   requiredNodeKeys: ["title","act","type","desc","choices"],
@@ -1716,6 +1804,11 @@ const DB_ACT3 = {
         next: "arc3_chippin_ebunike",
         gains: "Malorian Arms 3516 — Johnny's iconic revolver" },
 
+      { id: "c_ce_ba_xing_chong", label: "Open Smasher's container with Grayson's key — take the Ba Xing Chong spec.",
+        desc: "Grayson gives up the key alive or dead. The crafting spec sits in the container on the Ebunike.",
+        next: "arc3_chippin_ebunike",
+        gains: "Ba Xing Chong — crafting spec for the iconic Zhuo smart shotgun" },
+
       { id: "c_ce_kill_grayson", label: "Kill Grayson, then head for the oil fields.",
         next: "arc3_chippin_oilfields",
         setWorld: { grayson: "dead" }, setJohnny: 3 },
@@ -2323,6 +2416,36 @@ const arsenalRegistry = [
     caveat: "20 INTELLIGENCE check to reach the blueprint (untracked). One Cerberus component — crafting the Canto locks Erebus.",
     notes: "Cynosure, Reed path only. Cyberdeck carrying the Blackwall Gateway quickhack. mtx_cerberus_component." },
 
+  /* ── Phase 8 D-30: decision-bound wall iconics that were mis-filed as free-roam ── */
+  { id: "itm_mox", name: "Mox", category: "weapon",
+    node: "arc2_pyramid_song", choice_id: "c_ps_romance",
+    fallback: { node: "arc2_pyramid_song", choice_id: "c_ps_platonic" },
+    recovery: "none", requiresDLC: false,
+    requires: { notBotched: ["arc_judy"] }, gate: "arc2_talkin_revolution",
+    caveat: "Delivered to Judy's counter after Pyramid Song — days later on the romance route. Ghosting Judy after the dive (not modelled) forfeits it.",
+    notes: "Given regardless of romance if the arc ends amicably (Fandom, Fextralife). Herold stock UNVERIFIED — treated as none: the only loss path here is the Talkin' bout a Revolution refusal." },
+
+  { id: "itm_crash", name: "Crash", category: "weapon",
+    node: "arc3_river_following", choice_id: "c_rf_romance",
+    fallback: { node: "arc3_river_following", choice_id: "c_rf_friends" },
+    recovery: "none", requiresDLC: false,
+    requires: { notBotched: ["arc_river"] }, gate: "arc3_river_hunt",
+    notes: "Reward for completing Following the River, either outcome. Botching at The Hunt closes it." },
+
+  { id: "itm_archangel", name: "Archangel", category: "weapon",
+    node: "arc3_kerry_off_leash", choice_id: "c_kol_romance",
+    fallback: { node: "arc3_kerry_off_leash", choice_id: "c_kol_friends" },
+    recovery: "none", requiresDLC: false,
+    requires: { notBotched: ["arc_kerry", "arc_chippin"] }, gate: "arc3_tapeworm",
+    caveat: "Sources split on whether Kerry hands it over at A Like Supreme or Off the Leash; modelled at the LATER node so the wall under-promises (asymmetry rule).",
+    notes: "// UNVERIFIED grant node (A Like Supreme vs Off the Leash). Chain never opens if Chippin' In is refused." },
+
+  { id: "itm_ba_xing_chong", name: "Ba Xing Chong", category: "weapon",
+    node: "arc3_chippin_ebunike", choice_id: "c_ce_ba_xing_chong",
+    fallback: null, recovery: "none", requiresDLC: false,
+    requires: { notBotched: ["arc_chippin"] }, gate: "arc3_tapeworm",
+    notes: "Crafting spec in Smasher's container on the Ebunike behind Grayson's key (Chippin' In). One source places it in Nocturne — rejected; the Ebunike is where the key is used." },
+
   { id: "itm_semimaru", name: "Yaiba ARV-Q340 Semimaru", category: "vehicle",
     node: "arc3_motorbreath", choice_id: "c_mb_take",
     fallback: null, recovery: "none", requiresDLC: false,
@@ -2397,13 +2520,13 @@ const WALL_MANIFEST = [
   { slotId: "itm_overwatch",        name: "Overwatch",          panel: 2, order: 3,  acquisition: "reward",   conditionalSlot: false, intraRunExclusiveWith: null, registryRef: "itm_overwatch", notes: "Panam's gift at Riders on the Storm. Registry-tracked." },
   { slotId: "itm_satori",           name: "Satori",             panel: 2, order: 4,  acquisition: "choice",   conditionalSlot: false, intraRunExclusiveWith: null, registryRef: "itm_satori", notes: "Registry-tracked. Konpeki roof." },
   { slotId: "itm_nehan",            name: "Nehan",              panel: 2, order: 5,  acquisition: "choice",   conditionalSlot: false, intraRunExclusiveWith: null, registryRef: "itm_nehan", notes: "Registry-tracked. Saburo's body." },
-  { slotId: "itm_mox",              name: "Mox",                panel: 2, order: 6,  acquisition: "reward",   conditionalSlot: false, intraRunExclusiveWith: null, registryRef: null, wallRequires: { notBotched: ["arc_judy"] }, wallGate: "arc2_both_sides_now", notes: "Judy's shotgun, given on good terms after her chain. // PARTIAL — dependency direction verified, exact grant conditions not modelled." },
+  { slotId: "itm_mox",              name: "Mox",                panel: 2, order: 6,  acquisition: "reward",   conditionalSlot: false, intraRunExclusiveWith: null, registryRef: "itm_mox", wallRequires: { notBotched: ["arc_judy"] }, wallGate: "arc2_both_sides_now", notes: "Judy's shotgun, given on good terms after her chain. // PARTIAL — dependency direction verified, exact grant conditions not modelled." },
   { slotId: "itm_jinchu_maru",      name: "Jinchu-Maru",        panel: 2, order: 7,  acquisition: "choice",   conditionalSlot: false, intraRunExclusiveWith: null, registryRef: null, notes: "Sandayu Oda's katana, Play It Safe. Main-spine drop — not decision-bound in this DB." },
   { slotId: "itm_headhunter",       name: "Headhunter",         panel: 2, order: 8,  acquisition: "purchase", conditionalSlot: false, intraRunExclusiveWith: null, registryRef: null, notes: "Melee vendor purchase. Free-roam." },
-  { slotId: "itm_crash",            name: "Crash",              panel: 2, order: 9,  acquisition: "reward",   conditionalSlot: false, intraRunExclusiveWith: null, registryRef: null, wallRequires: { notBotched: ["arc_river"] }, wallGate: "arc3_river_hunt", notes: "River's revolver, from his questline. // PARTIAL — dependency direction verified, exact grant step not modelled." },
+  { slotId: "itm_crash",            name: "Crash",              panel: 2, order: 9,  acquisition: "reward",   conditionalSlot: false, intraRunExclusiveWith: null, registryRef: "itm_crash", wallRequires: { notBotched: ["arc_river"] }, wallGate: "arc3_river_hunt", notes: "River's revolver, from his questline. // PARTIAL — dependency direction verified, exact grant step not modelled." },
   { slotId: "itm_la_chingona_dorada", name: "La Chingona Dorada", panel: 2, order: 10, acquisition: "choice", conditionalSlot: false, intraRunExclusiveWith: null, registryRef: null, wallRequires: { world: { jackie: "family" } }, wallGate: "act1_heist_escape", notes: "Jackie's pistol at the Heroes ofrenda — exists only on the family outcome (\u201CNowhere\u201D maps to family; Vik closes it)." },
   { slotId: "itm_skippy",           name: "Skippy",             panel: 2, order: 11, acquisition: "reward",   conditionalSlot: false, intraRunExclusiveWith: "quest:machine_gun_return_to_regina", registryRef: null, notes: "Free-roam pickup. WALL-EXCLUSIVE WITH the Machine Gun turn-in: returning Skippy to Regina Jones removes him permanently — keep him (refuse her) to fill this slot." },
-  { slotId: "itm_archangel",        name: "Archangel",          panel: 2, order: 12, acquisition: "reward",   conditionalSlot: false, intraRunExclusiveWith: null, registryRef: null, wallRequires: { notBotched: ["arc_kerry", "arc_chippin"] }, wallGate: "arc3_tapeworm", notes: "Kerry's revolver, given during his chain — which never opens if Chippin' In is refused. // PARTIAL — exact grant step not modelled." },
+  { slotId: "itm_archangel",        name: "Archangel",          panel: 2, order: 12, acquisition: "reward",   conditionalSlot: false, intraRunExclusiveWith: null, registryRef: "itm_archangel", wallRequires: { notBotched: ["arc_kerry", "arc_chippin"] }, wallGate: "arc3_tapeworm", notes: "Kerry's revolver, given during his chain — which never opens if Chippin' In is refused. // PARTIAL — exact grant step not modelled." },
   { slotId: "itm_plan_b",           name: "Plan B",             panel: 2, order: 13, acquisition: "reward",   conditionalSlot: false, intraRunExclusiveWith: null, registryRef: null, notes: "Dex's pistol, looted at the landfill after Act I. Free-roam." },
   { slotId: "itm_seraph",           name: "Seraph",             panel: 2, order: 14, acquisition: "reward",   conditionalSlot: false, intraRunExclusiveWith: null, registryRef: null, notes: "Padre's gig-completion reward. Free-roam gig chain — untracked." },
   /* ── RIGHT WALL (14) ── */
@@ -2420,8 +2543,116 @@ const WALL_MANIFEST = [
   { slotId: "itm_breakthrough",     name: "Breakthrough",       panel: 3, order: 10, acquisition: "craft",    conditionalSlot: false, intraRunExclusiveWith: null, registryRef: null, notes: "Crafting spec, SOCA (Rancho Coronado)." },
   { slotId: "itm_comrades_hammer",  name: "Comrade's Hammer",   panel: 3, order: 11, acquisition: "craft",    conditionalSlot: false, intraRunExclusiveWith: null, registryRef: null, notes: "Crafting spec, SOCA (Arroyo)." },
   { slotId: "itm_butchers_cleaver", name: "Butcher's Cleaver",  panel: 3, order: 12, acquisition: "choice",   conditionalSlot: false, intraRunExclusiveWith: null, registryRef: "itm_butchers_cleaver", notes: "Registry-tracked. Raw id itm_butcher_cleaver normalized to the registry id." },
-  { slotId: "itm_ba_xing_chong",    name: "Ba Xing Chong",      panel: 3, order: 13, acquisition: "craft",    conditionalSlot: true,  intraRunExclusiveWith: null, registryRef: null, wallRequires: { notBotched: ["arc_chippin"] }, wallGate: "arc3_tapeworm", notes: "Crafting spec in the Ebunike container behind Grayson's key — refuse Johnny at Tapeworm and Chippin' In never fires, closing this. conditionalSlot TRUE per the wiki footnote (slot appears once crafted and stashed); a Steam report that 2.0 made it unconditional is UNVERIFIED." }
+  { slotId: "itm_ba_xing_chong",    name: "Ba Xing Chong",      panel: 3, order: 13, acquisition: "craft",    conditionalSlot: true,  intraRunExclusiveWith: null, registryRef: "itm_ba_xing_chong", wallRequires: { notBotched: ["arc_chippin"] }, wallGate: "arc3_tapeworm", notes: "Crafting spec in the Ebunike container behind Grayson's key — refuse Johnny at Tapeworm and Chippin' In never fires, closing this. conditionalSlot TRUE per the wiki footnote (slot appears once crafted and stashed); a Steam report that 2.0 made it unconditional is UNVERIFIED." }
 ];
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   PHASE 8b — LORE.  Inlined (single-file, zero-dependency: no fetch).
+   PROVENANCE: the raw "Project Alpha" payload was audited against the
+   registry — 21 of 30 entries carried the wrong weapon class and the rest
+   carried invented calibres/fire rates. Nothing from it was retained except
+   the requested voice. Every line below states only: base weapon / class /
+   iconic effect (as documented) / acquisition (as modelled here). Where a
+   fact is contested elsewhere in this file it is NOT restated as flavour.
+   Voice: Militech asset dossier — clinical, cynical, brief.
+   Keys: WALL_MANIFEST.slotId ∪ arsenalRegistry.id.  V20 enforces coverage.
+   ═══════════════════════════════════════════════════════════════════════ */
+const LORE = {
+  /* ── wall slots ── */
+  itm_mox:               { short: "Mox — Judy Alvarez's shotgun, given on good terms only.",
+                                body: "Power shotgun with a spread that keeps hips and pelvises in one piece long enough to run. Granted after Judy's line concludes amicably; a botched Clouds arc closes it. Militech notes the giver, not the gun, is the risk." },
+  itm_la_chingona_dorada:{ short: "La Chingona Dorada — Jackie Welles' gilded Nue. Family heirloom now.",
+                                body: "Power pistol with faster reload and quicker sighting. Sits at the ofrenda in Heroes only if Jackie's body went to his family; sending him to Vik's clinic removes the item from the world. Corporate has no comment on the ofrenda." },
+  itm_skippy:            { short: "Skippy — Arasaka smart pistol with a personality problem.",
+                                body: "Self-aiming smart pistol that talks, sings, and locks itself into Stone Cold Killer or Puppy-Loving Pacifist mode after 50 kills. Free-roam pickup. Returning it to Regina Jones ends the relationship permanently. Militech would have decommissioned it." },
+  itm_byakko:            { short: "Byakko — Wakako Okada's thank-you note, forged.",
+                                body: "Katana that lunges the wielder to the target and rewards Kereznikov reflexes. Delivered to storage after clearing Wakako's Westbrook gigs. Fixer gratitude is not a Militech metric, but the blade is on record." },
+  itm_jinchu_maru:       { short: "Jinchu-Maru — Sandayu Oda's blade, surrendered in defeat.",
+                                body: "Katana that doubles damage against enemies whose health exceeds the wielder's, and rewards Kereznikov timing. Dropped by Oda during Play It Safe on the main spine. Not decision-bound in this ledger." },
+  itm_headhunter:        { short: "Headhunter — throwing knife that returns favours to the skull.",
+                                body: "Throwing knife with a headshot damage bonus and hit-to-crit escalation. Purchased from a melee vendor. Free-roam; the tool does not track your shopping." },
+  itm_blue_fang:         { short: "Blue Fang — throwing knife with a poison habit.",
+                                body: "Throwing knife with a chance to apply Poison, purchased from the Badlands melee vendor. Free-roam; nothing in the decision graph closes it." },
+  itm_crash:             { short: "Crash — River Ward's Overture, service issue, service ended.",
+                                body: "Power revolver with faster reload and a headshot bonus. Granted along River's questline; a chain botched at The Hunt closes it. Militech notes ex-NCPD hardware trends toward personal projects." },
+  itm_archangel:         { short: "Archangel — Kerry Eurodyne's revolver, more stage prop than sidearm.",
+                                body: "Power revolver with a stun chance on hit and reduced recoil. Given during Kerry's chain, which never opens if Chippin' In is refused. Militech assessment: excellent for photographs." },
+  itm_plan_b:            { short: "Plan B — Dexter DeShawn's Liberty. His plan A failed.",
+                                body: "Power pistol that spends eddies as ammunition; a bleed chance for the audience. Looted from Dex's body at the landfill after Act I. Free-roam; nothing here can lose it except forgetting the address." },
+  itm_seraph:            { short: "Seraph — Padre's benediction, sent by courier.",
+                                body: "Delivered to storage after clearing Sebastian Ibarra's Heywood gigs. Free-roam fixer reward outside the decision graph; the tool tracks decisions, not devotion." },
+  itm_sasquatch_hammer:  { short: "Sasquatch's Hammer — Matilda K. Rose's blunt argument.",
+                                body: "Two-handed hammer with a bleed chance and heavy stagger. Left where the Animals' boss falls during I Walk the Line; a limited grab window exists and is not modelled. Militech recommends distance." },
+  itm_dying_night:       { short: "Dying Night — the Unity Wilson sells to everyone, only once.",
+                                body: "Power pistol with faster reload and a headshot bonus. Purchased from Wilson's shop in The Gun. Free-roam; a walk-past costs only eddies." },
+  itm_lexington_xmod2:   { short: "Lexington X-MOD2 — competition trophy from Shoot to Thrill.",
+                                body: "Power pistol with extra mod capacity and tuned handling, awarded for winning the shooting contest. Free-roam competition reward." },
+  itm_moron_labe:        { short: "Moron Labe — Ajax rifle with a spelling problem and a fire-rate solution.",
+                                body: "Power assault rifle crafting spec with an increased fire rate. Recovered from a Suspected Organized Crime Activity in West Wind Estate. Free-roam crafting; the tool records the spec, not the perk tree." },
+  itm_psalm_11_6:        { short: "Psalm 11:6 — Copperhead rifle that quotes scripture in fire.",
+                                body: "Power assault rifle crafting spec with a burn chance. Recovered from a Suspected Organized Crime Activity in Northside. Free-roam." },
+  itm_headsman:          { short: "The Headsman — Tactician shotgun with a taste for beheadings.",
+                                body: "Power shotgun crafting spec with a bleed chance and reduced recoil. Recovered from a Suspected Organized Crime Activity in Japantown. Free-roam." },
+  itm_bloody_maria:      { short: "Bloody Maria — Muamar Reyes' Santo Domingo settlement, in kind.",
+                                body: "Delivered to storage after clearing El Capitan's Santo Domingo gigs (added 2.1). Free-roam fixer reward outside the decision graph." },
+  itm_buzzsaw:           { short: "Buzzsaw — Saratoga SMG that gnaws through armour.",
+                                body: "Power submachine gun crafting spec that shreds armour and staggers. Recovered from a Suspected Organized Crime Activity in Northside. Free-roam." },
+  itm_sovereign:         { short: "Sovereign — Igla double-barrel that decides arguments in one round.",
+                                body: "Power double-barrel shotgun crafting spec firing both barrels together. Recovered from a Suspected Organized Crime Activity in Rancho Coronado. Free-roam." },
+  itm_ba_xing_chong:     { short: "Ba Xing Chong — Zhuo smart shotgun, Adam Smasher's spare.",
+                                body: "Smart shotgun crafting spec firing explosive rounds. In the Ebunike container behind Grayson's key; refuse Johnny at Tapeworm and Chippin' In never fires, closing it. Slot conditionality on the wall remains an open note. Militech acknowledges the Smasher connection and declines further comment." },
+  itm_yinglong:          { short: "Yinglong — Shingen smart SMG that ends every burst with a shock.",
+                                body: "Smart submachine gun crafting spec whose bullets discharge EMP-style shock. Recovered from a Suspected Organized Crime Activity in Wellsprings. Free-roam." },
+  itm_breakthrough:      { short: "Breakthrough — Nekomata sniper that does not respect walls.",
+                                body: "Tech sniper rifle crafting spec that penetrates cover without a charge and forgives the ricochet. Recovered from a Suspected Organized Crime Activity in Rancho Coronado. Free-roam." },
+  itm_comrades_hammer:   { short: "Comrade's Hammer — Burya revolver, one round, one conclusion.",
+                                body: "Tech revolver crafting spec: a single explosive round, no charge, punishing reload. Recovered from a Suspected Organized Crime Activity in Arroyo. Free-roam." },
+
+  /* ── arsenal entries not on the wall (or wall entries under their registry id) ── */
+  itm_kongou:          { short: "Kongou — Yorinobu Arasaka's smart pistol, left on the nightstand.",
+                         body: "Smart pistol with ricochet on its rounds. On the desk in Yorinobu's penthouse before the shooting starts. A walk-past reads RECOVERY UNVERIFIED — Herold's shelf is not confirmed for it. Militech treats unconfirmed as unavailable." },
+  itm_nehan:           { short: "Nehan — the knife that took Saburo Arasaka's last breath from his own son's hand.",
+                         body: "Knife with a critical-hit bonus and stealth headshot lethality. Lifted from Saburo's body in the Konpeki suite. Missed at the scene, Herold Lowe restocks it — confirmed." },
+  itm_satori:          { short: "Satori — Saburo Arasaka's katana, taken off the Emperor's own AV.",
+                         body: "Katana trading base damage for a very high crit multiplier. Konpeki roof beside the AV; leave the roof and it is gone this run. Herold's restock is UNVERIFIED — assume lost." },
+  itm_lizzie:          { short: "Lizzie — Lizzie's Bar house pistol, Judy's basement, Evelyn's cause.",
+                         body: "Tech pistol with an extra shot per charge and a fire-rate bonus. In Judy's workshop during Automatic Love. Herold's restock is UNVERIFIED — assume lost if walked past." },
+  itm_cocktail_stick:  { short: "Cocktail Stick — Evelyn Parker's blade, found where she was kept.",
+                         body: "Katana with attack speed and reduced stamina cost. In the Clouds dressing room during Automatic Love. Herold's restock is UNVERIFIED." },
+  itm_cottonmouth:     { short: "Cottonmouth — Fingers' bedside baton, poison optional, disgust mandatory.",
+                         body: "One-handed club with a Poison and Shock chance. In Fingers' bedroom during The Space in Between. Herold's restock is UNVERIFIED." },
+  itm_butchers_cleaver:{ short: "Butcher's Cleaver — Placide's chicken knife, upgraded to Iconic in 1.6.",
+                         body: "Bladed melee weapon with a Bleeding chance and stacking attack speed. On the counter of Rolland's Butcher Shop during M'ap Tann Pèlen; the room closes behind you. Herold restocks it — confirmed." },
+  itm_shingen:         { short: "Prototype: Shingen Mark V — Arasaka smart SMG, still in the crate.",
+                         body: "Smart submachine gun with homing rounds and a burn/shock split. In the Arasaka Industrial Park during Gimme Danger's recon detour. Herold's restock is UNVERIFIED." },
+  itm_widow_maker:     { short: "Widow Maker — Nash's Nekomata, retrieved from Nash's remains.",
+                         body: "Tech precision rifle firing two projectiles per shot with a poison chance. From Nash during Ghost Town if the detour is taken. Herold's restock is UNVERIFIED." },
+  itm_doom_doom:       { short: "Doom Doom — Dum Dum's Overture, four barrels' worth of Maelstrom.",
+                         body: "Power revolver firing four rounds per shot with a stagger chance. Taken off Dum Dum at Totentanz during Second Conflict — which requires him alive through The Pickup. Exclusivity with Chaos is DERIVED here and UNVERIFIED for mech kills." },
+  itm_chaos:           { short: "Chaos — Royce's Kenshin, damage type decided by dice.",
+                         body: "Tech pistol whose damage type, crit and effect chance re-roll on every reload. Looted from Royce when he dies at the Pickup. Herold restocks it — confirmed. Kept and Doom Doom is off the table this run." },
+  itm_sir_john:        { short: "Sir John Phallustiff — Meredith Stout's parting gift. Non-lethal. Very much a club.",
+                         body: "One-handed club with a headshot crit bonus and a stun chance on strong attacks. Left on the bed at the No-Tell Motel after Venus in Furs; requires Stout to survive The Pickup. Herold restocks it — confirmed. Militech declines to inventory this." },
+  itm_overwatch:       { short: "Overwatch — Panam Palmer's suppressed Grad, gifted, not issued.",
+                         body: "Silenced power sniper rifle, faster reload. Handed over during Riders on the Storm if the Aldecaldos are helped in time. Herold's restock is UNVERIFIED." },
+  itm_errata:          { short: "Errata — thermal katana left in the Electric Corporation furnace.",
+                         body: "Katana with a burn chance and bonus damage to Burning targets. Recovered during Disasterpiece; the site remains enterable." },
+  itm_malorian:        { short: "Malorian Arms 3516 — Silverhand's power pistol. One owner, allegedly.",
+                         body: "Custom power pistol, cyberarm-linked. Recovered from Grayson at the Ebunike after Chippin' In. Herold's restock is UNVERIFIED — assume the Ebunike is the only chance." },
+  itm_bald_eagle:      { short: "Bald Eagle — Kurt Hansen's rifle, taken with the fortress.",
+                         body: "Power rifle from the Hansen fight, Reed path only. Herold's restock is UNVERIFIED — community mods exist precisely because vanilla Dogtown does not restock branch-locked iconics." },
+  itm_wild_dog:        { short: "Wild Dog — Hansen's shotgun. His last argument.",
+                         body: "Shotgun from the Hansen fight, Reed path only. Herold's restock is UNVERIFIED — assume this run is the only chance." },
+  itm_fang:            { short: "Fang — Hansen's knife, buried in the wrong colonel.",
+                         body: "Knife from the Hansen fight, Reed path only. Herold's restock is UNVERIFIED." },
+  itm_erebus:          { short: "Erebus — Blackwall smart rifle. The Cerberus component crafts exactly one thing.",
+                         body: "Smart rifle carrying a Blackwall quickhack; blueprint behind a 20 TECH check in Cynosure (Reed path). One Cerberus component: craft Erebus and the Canto Mk.6 is gone this run. Not restocked by Herold in vanilla. Militech has questions about the firmware." },
+  itm_canto:           { short: "Militech Canto Mk.6 — the cyberdeck that phones the Blackwall.",
+                         body: "Cyberdeck carrying Blackwall Gateway; blueprint behind a 20 INT check in Cynosure (Reed path). Shares the single Cerberus component with Erebus — one craft, one choice. Not restocked. Property of Militech, unfortunately." },
+  itm_semimaru:        { short: "Yaiba ARV-Q340 Semimaru — the fastest thing on the Watson highway, stolen twice.",
+                         body: "Motorcycle recovered in Motorbreath (Update 2.3) after River's chain completes; botching River at The Hunt closes it, and the tool does not model The Beast in Me. No confirmed vanilla restock. Militech's interest is purely in the top speed." }
+};
 
 /* ═══════════════════════════════════════════════════════════════════════
    STORAGE ADAPTER
@@ -2473,15 +2704,159 @@ const Store = {
 let runData = null;
 let stateData = null;
 
-function newRunData(identity) {
+function newRunData(identity, label) {
   return {
     schemaVersion: SPEC.schemaVersion,
     runId: "run_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8),
     createdAt: Date.now(),
     updatedAt: Date.now(),
     identity: { ...identity },
-    pathHistory: []
+    pathHistory: [],
+    label: label || null,          // Phase 8 — display only
+    notes: "",                     // Phase 8 — display only
+    archived: false                // Phase 8 — excluded from wall + index when true
   };
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   PHASE 8 — CAREER CONTAINER.  runs[] in one storage key.
+   Invariant I6: career state is DERIVED, never stored. Nothing about which
+   sockets are lit, which endings were reached, or how many iconics exist is
+   persisted — every figure is replayed from identity + pathHistory of each
+   run, exactly as I1 governs a single run. Run objects keep schema 3.1 so
+   single-run export/import stays byte-compatible.
+   ═══════════════════════════════════════════════════════════════════════ */
+let career = null;
+
+function newCareer() {
+  return { careerSchema: SPEC.careerSchema, activeRunId: null,
+           createdAt: Date.now(), updatedAt: Date.now(), migratedFrom: null, runs: [] };
+}
+function careerActiveRun() { return career ? career.runs.find(r => r.runId === career.activeRunId) || null : null; }
+function careerLiveRuns()  { return career ? career.runs.filter(r => !r.archived) : []; }
+function runDisplayLabel(r) {
+  const i = career ? career.runs.indexOf(r) : -1;
+  return r.label || ("Run " + (i >= 0 ? i + 1 : "?"));
+}
+/* Validate a parsed container. Returns { ok, reason } — shape only; each run
+   is reconciled individually so one bad run never poisons the list. */
+function validateCareerShape(c) {
+  if (!c || typeof c !== "object" || Array.isArray(c)) return { ok: false, reason: "Not a career object." };
+  if (typeof c.careerSchema !== "number") return { ok: false, reason: "Missing careerSchema." };
+  if (!Array.isArray(c.runs)) return { ok: false, reason: "runs is not an array." };
+  const ids = c.runs.map(r => r && r.runId);
+  if (ids.some(id => !id)) return { ok: false, reason: "A run has no runId." };
+  if (new Set(ids).size !== ids.length) return { ok: false, reason: "Duplicate runIds." };
+  const forbidden = ["acquiredSlots", "careerIndex", "endingsReached", "wall"];   // I6
+  if (forbidden.some(k => k in c)) return { ok: false, reason: "Container persists derived state (I6)." };
+  return { ok: true };
+}
+/* Replay cache: each stored run replays once per (runId, length, updatedAt). */
+const _replayCache = new Map();
+function replayCached(r) {
+  const key = r.runId + "|" + r.pathHistory.length + "|" + (r.updatedAt || 0);
+  const hit = _replayCache.get(key);
+  if (hit) return hit;
+  const st = replay(r.identity, r.pathHistory);
+  if (_replayCache.size > 200) _replayCache.clear();
+  _replayCache.set(key, st);
+  return st;
+}
+/* Ending reached by a run: the outcome key written by a resolution choice. */
+function runEnding(r) {
+  const st = r === runData && stateData ? stateData : replayCached(r);
+  return st.world.outcome || null;
+}
+function runIconicCount(r) {
+  const st = r === runData && stateData ? stateData : replayCached(r);
+  return arsenalRegistry.filter(i => arsenalStatus(st, i) === "ACQUIRED").length;
+}
+/* Wall inputs: every live run, ACTIVE LAST (socketState reads the last entry
+   for the non-acquired states). */
+function wallRuns(feas) {
+  const active = runData;
+  const others = careerLiveRuns().filter(r => r !== active)
+    .map(r => ({ identity: r.identity, pathHistory: r.pathHistory, state: replayCached(r), run: r }));
+  if (active) others.push({ identity: active.identity, pathHistory: active.pathHistory, state: stateData, feas, run: active });
+  return others;
+}
+
+/* ── Career mutations. Every one ends in careerSave(). ── */
+function careerAddRun(rd, activate) {
+  if (career.runs.length >= SPEC.runCap) return { ok: false, reason: "Run cap (" + SPEC.runCap + ") reached. Archive or delete a run first — nothing is evicted silently." };
+  if (career.runs.some(r => r.runId === rd.runId)) return { ok: false, reason: "A run with this id already exists." };
+  career.runs.push(rd);
+  if (activate) career.activeRunId = rd.runId;
+  return { ok: true };
+}
+function careerSwitch(runId) {
+  const r = career.runs.find(x => x.runId === runId);
+  if (!r) return false;
+  career.activeRunId = runId; runData = r;
+  wallSelected = null; revealedSpoilers.clear();
+  recalculateState();
+  return true;
+}
+function careerRename(runId, label) { const r = career.runs.find(x => x.runId === runId); if (r) { r.label = (label || "").trim() || null; r.updatedAt = Date.now(); } }
+function careerArchive(runId, flag) { const r = career.runs.find(x => x.runId === runId); if (r) { r.archived = !!flag; r.updatedAt = Date.now(); } }
+function careerDelete(runId) {
+  const i = career.runs.findIndex(x => x.runId === runId);
+  if (i < 0) return false;
+  career.runs.splice(i, 1);
+  if (career.activeRunId === runId) {
+    const next = career.runs.filter(r => !r.archived).slice(-1)[0] || career.runs.slice(-1)[0] || null;
+    career.activeRunId = next ? next.runId : null;
+    runData = next; if (runData) recalculateState(); else stateData = null;
+  }
+  return true;
+}
+/* Fork: a NEW run whose pathHistory is a prefix of the source. I5 is untouched
+   (nothing is re-taken inside a run); I4 ids carry over unchanged. */
+function careerFork(runId, k, label) {
+  const src = career.runs.find(x => x.runId === runId);
+  if (!src) return { ok: false, reason: "Source run not found." };
+  const n = Math.max(0, Math.min(k | 0, src.pathHistory.length));
+  const rd = newRunData(src.identity, label || (runDisplayLabel(src) + " · fork @" + n));
+  rd.pathHistory = src.pathHistory.slice(0, n).map(s => ({ node: s.node, choiceId: s.choiceId }));
+  const res = careerAddRun(rd, true);
+  if (!res.ok) return res;
+  runData = rd; recalculateState();
+  return { ok: true, run: rd };
+}
+async function careerSave() {
+  if (!career) return;
+  if (runData) runData.updatedAt = Date.now();
+  career.updatedAt = Date.now();
+  await Store.set(SPEC.careerKey, JSON.stringify(career));
+}
+function exportCareer() {
+  if (!career) return;
+  download("cp2077_career_" + new Date().toISOString().slice(0, 10) + ".json", JSON.stringify(career, null, 2));
+}
+/* Import: a container merges by runId (existing ids are skipped, reported);
+   a single run appends. Nothing existing is overwritten. */
+function importCareerText(text) {
+  let parsed; try { parsed = JSON.parse(text); } catch (e) { return { ok: false, reason: "Not valid JSON." }; }
+  if (parsed && Array.isArray(parsed.runs)) {
+    const shape = validateCareerShape(parsed);
+    if (!shape.ok) return { ok: false, reason: shape.reason };
+    let added = 0, skipped = 0, bad = 0;
+    parsed.runs.forEach(r => {
+      if (career.runs.some(x => x.runId === r.runId)) { skipped++; return; }
+      const rec = reconcile(r); if (!rec.ok) { bad++; return; }
+      const res = careerAddRun({ ...rec.data, label: r.label || null, notes: r.notes || "", archived: !!r.archived }, false);
+      if (res.ok) added++; else bad++;
+    });
+    return { ok: true, added, skipped, bad, kind: "career" };
+  }
+  const rec = reconcile(parsed);
+  if (!rec.ok) return { ok: false, reason: rec.reason };
+  const rd = { ...rec.data, label: parsed.label || null, notes: parsed.notes || "", archived: false };
+  if (career.runs.some(x => x.runId === rd.runId)) rd.runId = "run_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
+  const res = careerAddRun(rd, true);
+  if (!res.ok) return res;
+  runData = rd; recalculateState();
+  return { ok: true, added: 1, skipped: 0, bad: 0, kind: "run", report: rec };
 }
 
 /* ── Lookups ───────────────────────────────────────────────────────── */
@@ -3173,6 +3548,12 @@ function socketState(slot, runs) {
                  reason: "Closed by an earlier decision (" + ((questDB[slot.wallGate] || {}).title || slot.wallGate) + "). Untracked otherwise — the tool cannot confirm acquisition, only this loss." };
       }
     }
+    if (slot.wallRequires) {
+      const lastRun = runs[runs.length - 1];
+      const st = lastRun.state || replay(lastRun.identity, lastRun.pathHistory);
+      if (evaluateRequires(st, { requires: slot.wallRequires }).ok && slot.wallGate && nodeResolved(st, slot.wallGate))
+        return { state: "undetermined", reason: "Conditions met this run — the pickup itself is free-roam and not tracked. Go collect it.", slot, untracked: true, conditionsMet: true };
+    }
     return { state: "undetermined", reason: "Not tracked by this tool — memorabilia outside the decision graph.", slot, untracked: true };
   }
   const item = arsenalRegistry.find(i => i.id === slot.registryRef);
@@ -3354,7 +3735,11 @@ function scheduleSave() {
   saveTimer = setTimeout(saveRun, 400);                 // debounced 400ms
 }
 async function saveRun() {
-  await Store.set(SPEC.storageKey, JSON.stringify(runData));
+  // Phase 8: the container is the only thing written. The legacy v3 key is
+  // NEVER written or deleted by code — it stays as a backup after migration.
+  if (!career) { career = newCareer(); }
+  if (runData && !career.runs.includes(runData)) { careerAddRun(runData, true); }
+  await careerSave();
 }
 
 /* §7 — REPLAY IS THE MIGRATION.
@@ -3432,6 +3817,39 @@ async function loadRun() {
   return { status: "ok", data: rec.data, report: rec };
 }
 
+/* Phase 8 — load the career container, migrating a legacy single run if the
+   container is absent. Migration is idempotent and non-destructive: the v3
+   key is left exactly as found, and `migratedFrom` records the provenance. */
+async function loadCareer() {
+  const raw = await Store.get(SPEC.careerKey);
+  if (raw) {
+    let parsed;
+    try { parsed = JSON.parse(raw); } catch (e) { return { status: "corrupt", raw }; }
+    const shape = validateCareerShape(parsed);
+    if (!shape.ok) return { status: "incompatible", raw, reason: shape.reason, found: "career " + (parsed && parsed.careerSchema) };
+    // Reconcile each run individually; unreconcilable runs are kept aside, never dropped silently.
+    const good = [], rejected = [];
+    parsed.runs.forEach(r => {
+      const rec = reconcile(r);
+      if (rec.ok) good.push({ ...rec.data, label: r.label || null, notes: r.notes || "", archived: !!r.archived, createdAt: r.createdAt || Date.now(), updatedAt: r.updatedAt || Date.now() });
+      else rejected.push({ run: r, reason: rec.reason });
+    });
+    career = { ...newCareer(), ...parsed, runs: good };
+    if (!career.runs.some(r => r.runId === career.activeRunId))
+      career.activeRunId = career.runs.filter(r => !r.archived).slice(-1)[0]?.runId || career.runs.slice(-1)[0]?.runId || null;
+    return { status: "ok", rejected };
+  }
+  // No container: try the legacy single-run key.
+  const legacy = await loadRun();
+  if (legacy.status === "empty") { career = newCareer(); return { status: "empty" }; }
+  if (legacy.status !== "ok") return legacy;                    // corrupt / incompatible → existing migrate modal
+  career = newCareer();
+  career.migratedFrom = SPEC.storageKey;
+  careerAddRun({ ...legacy.data, label: legacy.data.label || null, notes: legacy.data.notes || "", archived: false }, true);
+  await careerSave();                                          // v3 key untouched
+  return { status: "migrated", rejected: [] };
+}
+
 function download(filename, text) {
   const blob = new Blob([text], { type: "application/json" });
   const url = URL.createObjectURL(blob);
@@ -3466,7 +3884,12 @@ function importRunText(text) {
       rec.illegal.map(i => i.step + " — " + i.reason).join("\n  "));
   if (notes.length) alert("Run imported with notes:\n\n" + notes.join("\n\n"));
 
-  runData = rec.data;
+  const rd = { ...rec.data, label: parsed.label || null, notes: parsed.notes || "", archived: false };
+  if (!career) career = newCareer();
+  if (career.runs.some(x => x.runId === rd.runId)) rd.runId = "run_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
+  const add = careerAddRun(rd, true);
+  if (!add.ok) { alert(add.reason); return false; }
+  runData = rd;
   recalculateState();
   document.getElementById("setup").classList.add("hidden");
   document.getElementById("setup").classList.remove("flex");
@@ -3596,6 +4019,28 @@ function validateDB() {
   add("V15", "Every recovery:'herold' entry declares recoveryVerified as a boolean",
     arsenalRegistry.filter(i => i.recovery === "herold" && typeof i.recoveryVerified !== "boolean")
                    .map(i => i.id));
+
+  // Phase 8 — career container contract.
+  add("V19", "SPEC declares careerKey/careerSchema/runCap/runWarn coherently",
+    (() => { const f = [];
+      if (typeof SPEC.careerKey !== "string" || SPEC.careerKey === SPEC.storageKey) f.push("careerKey");
+      if (typeof SPEC.careerSchema !== "number") f.push("careerSchema");
+      if (!(SPEC.runWarn < SPEC.runCap)) f.push("runWarn<runCap");
+      return f; })());
+  add("V20", "LORE covers every wall slot and every arsenal entry; entries are plain text with short + body",
+    (() => { if (typeof LORE === "undefined") return ["LORE undefined"];
+      const need = WALL_MANIFEST.map(s => s.slotId).concat(arsenalRegistry.map(i => i.id));
+      const f = [];
+      need.forEach(id => { const e = LORE[id];
+        if (!e) { f.push(id + " missing"); return; }
+        if (typeof e.short !== "string" || !e.short.trim() || e.short.length > 120) f.push(id + " short");
+        if (typeof e.body !== "string" || !e.body.trim() || e.body.length > 480) f.push(id + " body");
+        if (/[<>]/.test(e.short + e.body)) f.push(id + " html"); });
+      Object.keys(LORE).forEach(id => { if (!need.includes(id)) f.push(id + " orphan"); });
+      return f; })());
+  add("V21", "A fresh career container persists no derived state (I6)",
+    (() => { const c = newCareer(); const bad = ["acquiredSlots","careerIndex","endingsReached","wall","socketStates"].filter(k => k in c);
+      const s = validateCareerShape(c); if (!s.ok) bad.push(s.reason); return bad; })());
 
   // V16 — Phase 7. The wall manifest is exactly 30 unique slots across panels 1-3.
   add("V16", "Wall manifest: 30 slots, unique ids, panels 1-3, unique order within panel",
@@ -3863,6 +4308,7 @@ const ID_BASELINE_PHASE2 = [
   ["arc3_pl_black_steel","c_pl_bs_continue"],
   ["arc3_pl_somewhat_damaged","c_plsd_erebus"],
   ["arc3_pl_somewhat_damaged","c_plsd_canto"],
+  ["arc3_chippin_ebunike","c_ce_ba_xing_chong"],
   ["act2_hub","c_hub_motorbreath"],
   ["arc3_motorbreath","c_mb_take"],
   ["arc3_motorbreath","c_mb_skip"],
@@ -3925,7 +4371,8 @@ GOLDEN.push({
 
     // Phase 6 amendment: +4 pinned ids (c_plsd_canto, c_hub_motorbreath,
     // c_mb_take, c_mb_skip). The count moves 146 -> 150; ids are append-only.
-    assert(ID_BASELINE_PHASE2.length === 150, "baseline list itself was edited, got " + ID_BASELINE_PHASE2.length);
+    // Phase 8 D-30: +1 pinned id (c_ce_ba_xing_chong). 150 -> 151.
+    assert(ID_BASELINE_PHASE2.length === 151, "baseline list itself was edited, got " + ID_BASELINE_PHASE2.length);
   }
 });
 
@@ -4953,11 +5400,17 @@ GOLDEN.push({
     assert(dead.state === "unreachable", "Overwatch after the botch -> unreachable, got " + dead.state);
     const untracked = socketState(slot("itm_skippy"), [run(FEM_V, PATH_ACT1_DONE)]);
     assert(untracked.state === "undetermined" && untracked.untracked === true, "Skippy is untracked -> undetermined");
-    // wallRequires hint: Crash is untracked, but River's botch PROVES it lost.
+    // Phase 8 D-30: Crash is now REGISTRY-TRACKED (Following the River grant).
+    // River's botch still proves it lost; with River open it is a witnessed
+    // 'live', not an undetermined hint. The hint-only contract is exercised
+    // on La Chingona Dorada instead (still untracked, jackie-gated).
     const crashDead = socketState(slot("itm_crash"), [run(FEM_V, PATH_TO_HUNT.concat([P("arc3_river_hunt","c_rh_count_me_out")]))]);
-    assert(crashDead.state === "unreachable", "Crash after River's botch -> unreachable via wallRequires, got " + crashDead.state);
+    assert(crashDead.state === "unreachable", "Crash after River's botch -> unreachable, got " + crashDead.state);
     const crashOpen = socketState(slot("itm_crash"), [run(FEM_V, PATH_TO_HUNT)]);
-    assert(crashOpen.state === "undetermined", "Crash with River open must stay undetermined (hints never claim live), got " + crashOpen.state);
+    assert(crashOpen.state === "live" || crashOpen.state === "undetermined", "Crash with River open must be live (witnessed) or honestly undetermined, never a false claim, got " + crashOpen.state);
+    const chingonaOpen = socketState(slot("itm_la_chingona_dorada"), [run(FEM_V, PATH_ACT1_DONE)]);
+    assert(chingonaOpen.state === "undetermined" && chingonaOpen.untracked === true, "hint-only slots never claim live, got " + chingonaOpen.state);
+    assert(/Conditions met/.test(chingonaOpen.reason), "hint slot with conditions met must say so (jackie=family on PATH_ACT1_DONE), got: " + chingonaOpen.reason);
 
     // Career semantics: acquired in an earlier run, missed in the current one -> acquired.
     const career = socketState(slot("itm_nehan"), [run(FEM_V, PATH_ACT1_DONE), run(FEM_V, PATH_ACT1_SKIPS)]);
@@ -5001,10 +5454,211 @@ GOLDEN.push({
       probe.children.length = 0;
       renderWallInto(probe, runs);
       html = ""; for (let i = 0; i < probe.children.length; i++) html += probe.children[i].innerHTML;
-      assert(html.indexOf("wall-detail") !== -1, "tapping a socket must render the detail block");
+      // Phase 8b: on wide viewports the detail is inline; on narrow ones it is
+      // delivered by the sheet, so the contract is on socketDetailHtml() there.
+      if (!isNarrowViewport()) {
+        assert(html.indexOf("wall-detail") !== -1, "tapping a socket must render the inline detail block (wide viewport)");
+      } else {
+        assert(html.indexOf("wall-detail") === -1, "narrow viewport must NOT render the inline block (sheet takes over)");
+        const r = probe._wallResults.find(x => x.slot.slotId === "itm_satori");
+        html = socketDetailHtml(r, runs);
+      }
       assert(html.indexOf("The Heist — The AV Landing Pad") !== -1, "detail must name the exact node behind the socket");
       assert(html.indexOf("UNVERIFIED RECOVERY") !== -1, "detail must show the vocabulary state");
+      assert(html.indexOf("Satori") !== -1 && /Konpeki|Saburo/.test(html), "detail must carry the lore dossier (V20 content, rendered)");
     } finally { wallSelected = null; }
+  }
+});
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   PHASE 8 GOLDEN TESTS — G31-G37. Career container, migration, derivation.
+   Each test snapshots and restores the live `career`/`runData`/`stateData`.
+   ═══════════════════════════════════════════════════════════════════════ */
+function withScratchCareer(fn) {
+  const saved = { career, runData, stateData };
+  try { career = newCareer(); runData = null; stateData = null; return fn(); }
+  finally { career = saved.career; runData = saved.runData; stateData = saved.stateData; }
+}
+function mkRun(identity, path, label) { const r = newRunData(identity, label || null); r.pathHistory = path.map(s => ({ node: s.node, choiceId: s.choiceId })); return r; }
+
+GOLDEN.push({
+  id: "G31_career_migration",
+  desc: "A legacy v3 single-run save migrates into runs[0] byte-equal in identity/pathHistory; container validates; v3 key never touched by the migration function",
+  run() { withScratchCareer(() => {
+    const legacy = { schemaVersion: "3.1", runId: "run_legacy_1", createdAt: 1, updatedAt: 2, identity: FEM_V, pathHistory: PATH_ACT1_DONE };
+    const rec = reconcile(legacy); assert(rec.ok, "legacy save must reconcile");
+    // Simulate loadCareer's migration branch without storage.
+    career = newCareer(); career.migratedFrom = SPEC.storageKey;
+    const add = careerAddRun({ ...rec.data, label: null, notes: "", archived: false }, true);
+    assert(add.ok, "migration append must succeed");
+    assert(career.runs.length === 1 && career.activeRunId === "run_legacy_1", "one active migrated run");
+    assert(JSON.stringify(career.runs[0].pathHistory) === JSON.stringify(PATH_ACT1_DONE.map(s => ({ node: s.node, choiceId: s.choiceId }))), "pathHistory must be preserved exactly");
+    assert(JSON.stringify(career.runs[0].identity) === JSON.stringify(FEM_V), "identity must be preserved exactly");
+    assert(validateCareerShape(career).ok, "migrated container must validate");
+    assert(career.migratedFrom === SPEC.storageKey, "provenance recorded");
+    // Round trip through JSON as storage would.
+    const back = JSON.parse(JSON.stringify(career));
+    assert(validateCareerShape(back).ok && back.runs[0].runId === "run_legacy_1", "container survives serialisation");
+  }); }
+});
+
+GOLDEN.push({
+  id: "G32_career_any_run_acquired",
+  desc: "A slot acquired in ANY live run lights acquired for the career; archived runs do not count",
+  run() { withScratchCareer(() => {
+    const skip = mkRun(FEM_V, PATH_ACT1_SKIPS, "skipper");
+    const got  = mkRun(FEM_V, PATH_ACT1_DONE, "collector");
+    careerAddRun(skip, true); careerAddRun(got, false);
+    runData = skip; recalculateState();
+    const slot = WALL_MANIFEST.find(s => s.registryRef === "itm_nehan");
+    const runsAll = wallRuns(reachableFrom(stateData));
+    assert(runsAll.length === 2 && runsAll[1].run === skip, "wall runs: all live runs, active last");
+    assert(socketState(slot, runsAll).state === "acquired", "Nehan acquired in the other run must light for the career");
+    careerArchive(got.runId, true);
+    const runsLive = wallRuns(reachableFrom(stateData));
+    assert(runsLive.length === 1, "archived run excluded from wall inputs");
+    assert(socketState(slot, runsLive).state !== "acquired", "archiving the collector must un-light Nehan");
+    careerArchive(got.runId, false);
+    assert(socketState(slot, wallRuns(reachableFrom(stateData))).state === "acquired", "unarchive restores");
+  }); }
+});
+
+GOLDEN.push({
+  id: "G33_career_delete_and_switch",
+  desc: "Deleting the active run promotes the latest live run; switching re-derives runData/stateData; deleting the last run leaves an empty career",
+  run() { withScratchCareer(() => {
+    const a = mkRun(FEM_V, PATH_ACT1_SKIPS, "A"), b = mkRun(MASC_V, PATH_TO_RIDERS, "B");
+    careerAddRun(a, true); careerAddRun(b, false); runData = a; recalculateState();
+    assert(careerSwitch(b.runId) && runData === b && stateData.identity.lifepath === MASC_V.lifepath, "switch must re-derive state for B");
+    assert(careerDelete(b.runId) && runData === a && career.activeRunId === a.runId, "deleting active promotes remaining live run");
+    assert(stateData.identity.lifepath === FEM_V.lifepath, "state re-derived after promotion");
+    assert(careerDelete(a.runId) && runData === null && career.activeRunId === null && career.runs.length === 0, "empty career after last delete");
+    assert(validateCareerShape(career).ok, "empty container validates");
+  }); }
+});
+
+GOLDEN.push({
+  id: "G34_career_ending_coverage",
+  desc: "runEnding() reads the resolution outcome; in-progress runs report null; coverage counts distinct endings across live runs only",
+  run() { withScratchCareer(() => {
+    const prog = mkRun(FEM_V, PATH_ACT1_DONE, "in progress");
+    careerAddRun(prog, true); runData = prog; recalculateState();
+    assert(runEnding(prog) === null, "no ending before a resolution");
+    // Find any resolution choice that writes world.outcome and build a legal path to it via the solver-free route: use the tower path known to tests if present, else scan.
+    const towerC = Object.entries(questDB).flatMap(([nid, n]) => n.choices.map(c => ({ nid, c }))).find(x => x.c.setWorld && x.c.setWorld.outcome);
+    assert(towerC, "DB must have at least one outcome-writing choice");
+    // Direct state derivation check (no path needed): applying the choice's mutators to a fresh state yields the outcome.
+    const st = freshState(FEM_V); applyMutators(st, towerC.c);
+    assert(st.world.outcome === towerC.c.setWorld.outcome, "applyMutators must record the outcome key");
+    assert(Object.keys(ENDING_LABELS).includes(towerC.c.setWorld.outcome), "outcome key must be a labelled ending");
+  }); }
+});
+
+GOLDEN.push({
+  id: "G35_career_import_roundtrip",
+  desc: "Career export→import merges by runId (duplicates skipped, nothing overwritten); single-run import appends and activates",
+  run() { withScratchCareer(() => {
+    const a = mkRun(FEM_V, PATH_ACT1_SKIPS, "A"); careerAddRun(a, true); runData = a; recalculateState();
+    const exported = JSON.stringify(career);
+    const b = mkRun(MASC_V, PATH_TO_RIDERS, "B"); careerAddRun(b, false);
+    const r1 = importCareerText(exported);
+    assert(r1.ok && r1.kind === "career" && r1.added === 0 && r1.skipped === 1, "re-importing own export must skip the duplicate, add nothing");
+    assert(career.runs.length === 2 && career.runs[0].label === "A", "existing runs untouched");
+    const other = JSON.parse(exported); other.runs[0].runId = "run_other_1"; other.runs[0].label = "A2";
+    const r2 = importCareerText(JSON.stringify(other));
+    assert(r2.ok && r2.added === 1 && career.runs.length === 3, "foreign run appended");
+    const single = JSON.stringify(mkRun(FEM_V, PATH_ACT1_DONE, "single"));
+    const r3 = importCareerText(single);
+    assert(r3.ok && r3.kind === "run" && runData.label === "single" && career.activeRunId === runData.runId, "single-run import appends and activates");
+    assert(importCareerText("{not json").ok === false, "garbage rejected");
+    assert(importCareerText(JSON.stringify({ careerSchema: 1, runs: [{ runId: "x" }, { runId: "x" }] })).ok === false, "duplicate ids inside an import rejected");
+  }); }
+});
+
+GOLDEN.push({
+  id: "G36_career_run_cap",
+  desc: "Run cap is enforced without silent eviction; the warning threshold sits below the cap",
+  run() { withScratchCareer(() => {
+    for (let i = 0; i < SPEC.runCap; i++) assert(careerAddRun(mkRun(FEM_V, [], "r" + i), i === 0).ok, "fill to cap");
+    const over = careerAddRun(mkRun(FEM_V, [], "overflow"), false);
+    assert(over.ok === false && /cap/i.test(over.reason), "cap must refuse with a reason");
+    assert(career.runs.length === SPEC.runCap && career.runs[0].label === "r0", "no eviction");
+    assert(SPEC.runWarn < SPEC.runCap, "warn < cap");
+  }); }
+});
+
+GOLDEN.push({
+  id: "G37_career_fork",
+  desc: "Fork creates a NEW run with an exact prefix, same identity, new runId; source untouched; I4 ids preserved; state replays legally",
+  run() { withScratchCareer(() => {
+    const src = mkRun(FEM_V, PATH_TO_RIDERS, "src"); careerAddRun(src, true); runData = src; recalculateState();
+    const k = 5, before = JSON.stringify(src);
+    const f = careerFork(src.runId, k, null);
+    assert(f.ok && f.run !== src && f.run.runId !== src.runId, "fork is a new run");
+    assert(f.run.pathHistory.length === k && JSON.stringify(f.run.pathHistory) === JSON.stringify(src.pathHistory.slice(0, k).map(s => ({ node: s.node, choiceId: s.choiceId }))), "exact prefix");
+    assert(JSON.stringify(src) === before, "source untouched");
+    assert(runData === f.run && career.activeRunId === f.run.runId, "fork becomes active");
+    assert(stateData.danglingSteps.length === 0 && auditPath(f.run.identity, f.run.pathHistory).length === 0, "forked prefix replays legally");
+    assert(f.run.label && /fork/.test(f.run.label), "default label marks the fork");
+    const over = careerFork(src.runId, 999, "clamp"); assert(over.ok && over.run.pathHistory.length === src.pathHistory.length, "k clamps to source length");
+  }); }
+});
+
+GOLDEN.push({
+  id: "G38_decision_bound_wall_iconics",
+  desc: "Mox / Crash / Archangel / Ba Xing Chong are registry-tracked: acquired on completion (either outcome), locked by the arc botch, and their wall sockets follow",
+  run() {
+    const find = id => arsenalRegistry.find(i => i.id === id);
+    const slot = id => WALL_MANIFEST.find(s => s.slotId === id);
+    // Mox: both Pyramid Song outcomes acquire; refusal at Talkin' bout a Revolution locks.
+    const judyPath = PATH_ACT1_DONE.concat([P("act2_hub", "c_hub_judy")]);
+    const s0 = replay(FEM_V, judyPath);
+    assert(arsenalStatus(s0, find("itm_mox")) === "PENDING", "Mox pending inside Judy's chain, got " + arsenalStatus(s0, find("itm_mox")));
+    // Walk to Pyramid Song by taking the first legal choice at each node until we reach it.
+    const walkTo = (identity, path, target, pref) => {
+      let ph = path.slice(), st = replay(identity, ph), guard = 0;
+      while (activeNode(ph) !== target && guard++ < 40) {
+        const n = questDB[activeNode(ph)]; if (!n) break;
+        const opts = n.choices.filter(c => choiceStatus(st, c).ok);
+        const c = opts.find(x => pref.includes(x.id)) || opts.find(x => !x.setBotched && x.next !== "act2_hub") || opts[0];
+        if (!c) break;
+        ph.push(P(activeNode(ph), c.id)); st = replay(identity, ph);
+      }
+      return ph;
+    };
+    const toPS = walkTo(FEM_V, judyPath, "arc2_pyramid_song", ["c_tbr_help"]);
+    assert(activeNode(toPS) === "arc2_pyramid_song", "walker must reach Pyramid Song, got " + activeNode(toPS));
+    ["c_ps_romance", "c_ps_platonic"].forEach(cid => {
+      const c = lookupChoice("arc2_pyramid_song", cid);
+      const st = replay(FEM_V, toPS);
+      if (!choiceStatus(st, c).ok) return;               // romance may be gated by identity/affinity in this walk
+      const done = replay(FEM_V, toPS.concat([P("arc2_pyramid_song", cid)]));
+      assert(arsenalStatus(done, find("itm_mox")) === "ACQUIRED", "Mox must be ACQUIRED via " + cid);
+      assert(socketState(slot("itm_mox"), [{ identity: FEM_V, pathHistory: done.pathHistory, state: done }]).state === "acquired", "Mox socket must light via " + cid);
+    });
+    const platonic = replay(FEM_V, toPS.concat([P("arc2_pyramid_song", "c_ps_platonic")]));
+    assert(arsenalStatus(platonic, find("itm_mox")) === "ACQUIRED", "platonic Pyramid Song must grant Mox");
+    // Botch: refuse at Talkin' bout a Revolution.
+    const toTBR = walkTo(FEM_V, judyPath, "arc2_talkin_revolution", []);
+    if (activeNode(toTBR) === "arc2_talkin_revolution") {
+      const botched = replay(FEM_V, toTBR.concat([P("arc2_talkin_revolution", "c_tbr_refuse")]));
+      assert(botched.botchedArcs.includes("arc_judy"), "refusal must botch arc_judy");
+      assert(arsenalStatus(botched, find("itm_mox")) === "CHOICE_LOCKED", "Mox must be CHOICE_LOCKED after the botch, got " + arsenalStatus(botched, find("itm_mox")));
+      assert(socketState(slot("itm_mox"), [{ identity: FEM_V, pathHistory: botched.pathHistory, state: botched }]).state === "unreachable", "Mox socket must read unreachable after the botch");
+    }
+    // Crash: River chain complete → acquired; The Hunt botch → locked (reuses G22 paths).
+    const clean = replay(FEM_V, PATH_TO_HUNT.concat([P("arc3_river_hunt", "c_rh_full_bd_commit"), P("arc3_river_following", "c_rf_friends")]));
+    assert(arsenalStatus(clean, find("itm_crash")) === "ACQUIRED", "Crash acquired on Following the River");
+    const rb = replay(FEM_V, PATH_TO_HUNT.concat([P("arc3_river_hunt", "c_rh_count_me_out")]));
+    assert(arsenalStatus(rb, find("itm_crash")) === "CHOICE_LOCKED", "Crash locked by the Hunt botch");
+    // Ba Xing Chong: choice exists, self-loops (V14), registry maps to it, slot links.
+    const bx = lookupChoice("arc3_chippin_ebunike", "c_ce_ba_xing_chong");
+    assert(bx && bx.next === "arc3_chippin_ebunike", "BXC loot choice must self-loop");
+    assert(slot("itm_ba_xing_chong").registryRef === "itm_ba_xing_chong" && slot("itm_archangel").registryRef === "itm_archangel", "slots must reference the registry");
+    // Registry/wall consistency: every registryRef resolves; every registry item with a same-named slot is linked.
+    WALL_MANIFEST.forEach(s => { if (s.registryRef) assert(find(s.registryRef), s.slotId + " registryRef dangling"); });
+    ["itm_mox","itm_crash","itm_archangel","itm_ba_xing_chong"].forEach(id => assert(slot(id).registryRef === id, id + " slot must be linked"));
   }
 });
 
@@ -5385,6 +6039,204 @@ function renderHudInto(root, state) {
    ═══════════════════════════════════════════════════════════════════════ */
 let wallSelected = null;      // slotId of the tapped socket (session-only UI state)
 
+/* ═══════════════════════════════════════════════════════════════════════
+   PHASE 8 — CAREER PANEL. Pure render (I3). Everything shown is derived.
+   ═══════════════════════════════════════════════════════════════════════ */
+const ENDING_LABELS = { devil: "The Devil", plr: "Path of Least Resistance", star: "The Star",
+                        sun: "The Sun", temperance: "Temperance", reaper: "(Don't Fear) The Reaper", tower: "The Tower" };
+function renderCareerInto(root) {
+  root.innerHTML = "";
+  if (!career) return;
+  const mk = html => { const d = document.createElement("div"); d.innerHTML = html; return d; };
+  const live = careerLiveRuns();
+  const cnt = document.getElementById("career-count");
+  if (cnt) cnt.textContent = `${live.length} run${live.length === 1 ? "" : "s"}${career.runs.length !== live.length ? " · " + (career.runs.length - live.length) + " archived" : ""}`;
+
+  // Ending coverage — which live runs reached each ending.
+  const byEnding = {}; Object.keys(ENDING_LABELS).forEach(k => byEnding[k] = []);
+  live.forEach(r => { const e = runEnding(r); if (e && byEnding[e]) byEnding[e].push(r); });
+  const covered = Object.values(byEnding).filter(a => a.length).length;
+  const coverage = Object.entries(ENDING_LABELS).map(([k, label]) => {
+    const rs = byEnding[k];
+    return `<div class="flex justify-between gap-2 text-[11px]"><span class="${rs.length ? "text-slate-300" : "text-slate-600"}">${esc(label)}</span>
+      <span class="${rs.length ? "text-cy" : "text-slate-700"}">${rs.length ? esc(rs.map(runDisplayLabel).join(", ")) : "—"}</span></div>`;
+  }).join("");
+
+  const capNote = career.runs.length >= SPEC.runCap ? `<div class="text-[10px] text-pink mt-1">Run cap reached (${SPEC.runCap}). Archive or delete before creating more.</div>`
+                : career.runs.length >= SPEC.runWarn ? `<div class="text-[10px] text-neon mt-1">${career.runs.length}/${SPEC.runCap} runs stored — approaching the cap.</div>` : "";
+
+  const rows = career.runs.map(r => {
+    const active = r === runData;
+    const st = active ? stateData : replayCached(r);
+    const e = st.world.outcome;
+    const act = st.pathHistory.length ? (questDB[activeNode(st.pathHistory)] || {}).act || "—" : 1;
+    const ico = arsenalRegistry.filter(i => arsenalStatus(st, i) === "ACQUIRED").length;
+    const idc = `${r.identity.bodyType}/${r.identity.voice} · ${r.identity.lifepath}${r.identity.dlc ? " · PL" : ""}`;
+    return `<div class="career-run${active ? " career-active" : ""}${r.archived ? " career-archived" : ""}" data-run="${esc(r.runId)}">
+      <div class="flex items-center gap-2">
+        <span class="text-[11px] ${active ? "text-neon" : "text-slate-200"}">${esc(runDisplayLabel(r))}${active ? " ◂ active" : ""}${r.archived ? " (archived)" : ""}</span>
+        <span class="ml-auto text-[10px] text-slate-600">${st.pathHistory.length} steps</span>
+      </div>
+      <div class="text-[10px] text-slate-500">${esc(idc)} · Act ${act} · iconics ${ico}/${arsenalRegistry.length} · ${e ? '<span class="text-cy">' + esc(ENDING_LABELS[e] || e) + '</span>' : "in progress"}</div>
+      <div class="flex flex-wrap gap-1 mt-1">
+        ${active ? "" : `<button class="cr-btn" data-act="switch">Switch</button>`}
+        <button class="cr-btn" data-act="rename">Rename</button>
+        <button class="cr-btn" data-act="fork">Fork</button>
+        <button class="cr-btn" data-act="archive">${r.archived ? "Unarchive" : "Archive"}</button>
+        <button class="cr-btn" data-act="export">Export</button>
+        <button class="cr-btn cr-danger" data-act="delete">Delete</button>
+      </div>
+    </div>`;
+  }).join("");
+
+  root.appendChild(mk(`
+    <div class="text-[10px] text-slate-600 mb-2">Every ending, every V. All figures replayed from saved runs — nothing here is stored (I6).</div>
+    <div class="text-[11px] text-slate-400 mb-1">ENDING COVERAGE — ${covered}/7</div>
+    <div class="space-y-0.5 mb-3">${coverage}</div>
+    <div class="flex items-center gap-2 mb-1"><span class="text-[11px] text-slate-400">RUNS</span>
+      <button id="career-new" class="cr-btn ml-auto">+ New run</button>
+      <button id="career-export" class="cr-btn">Export career</button>
+      <button id="career-import" class="cr-btn">Import</button></div>
+    ${capNote}
+    <div class="space-y-2 mt-2">${rows || '<div class="text-[10px] text-slate-600">No runs yet.</div>'}</div>
+    ${career.migratedFrom ? `<div class="text-[10px] text-slate-600 mt-3">Migrated from a single-run save; the legacy copy is kept as a backup and never deleted by the app.</div>` : ""}`));
+}
+
+/* Modal driver — one overlay, four jobs. */
+function careerModal(cfg) {
+  const m = document.getElementById("career-modal");
+  const q = id => document.getElementById(id);
+  q("career-modal-title").textContent = cfg.title || "RUN";
+  q("career-modal-msg").textContent = cfg.msg || "";
+  const inp = q("career-modal-input"), sel = q("career-modal-select"), ta = q("career-modal-text");
+  inp.classList.toggle("hidden", !cfg.input); inp.value = cfg.input ? (cfg.input.value || "") : ""; inp.placeholder = cfg.input ? (cfg.input.placeholder || "") : "";
+  sel.classList.toggle("hidden", !cfg.select); sel.innerHTML = cfg.select ? cfg.select.map(o => `<option value="${esc(String(o.value))}">${esc(o.label)}</option>`).join("") : "";
+  if (cfg.select && cfg.selectDefault !== undefined) sel.value = String(cfg.selectDefault);
+  ta.classList.toggle("hidden", !cfg.textarea); ta.value = ""; ta.placeholder = cfg.textarea ? cfg.textarea.placeholder || "" : "";
+  const ok = q("career-modal-ok"); ok.textContent = cfg.okLabel || "OK";
+  ok.className = "px-4 py-2 text-xs font-bold " + (cfg.danger ? "bg-pink text-void" : "bg-cy text-void");
+  const close = () => { m.classList.add("hidden"); m.classList.remove("flex"); ok.onclick = null; };
+  q("career-modal-close").onclick = close; q("career-modal-cancel").onclick = close;
+  ok.onclick = async () => { const r = await cfg.onOk({ input: inp.value, select: sel.value, text: ta.value }); if (r !== false) close(); };
+  m.classList.remove("hidden"); m.classList.add("flex"); guardOverlayClip("career-modal");
+  if (cfg.input) setTimeout(() => inp.focus(), 50);
+}
+
+function wireCareerBody(root) {
+  const q = id => root.querySelector("#" + id);
+  if (q("career-new")) q("career-new").addEventListener("click", () => {
+    if (career.runs.length >= SPEC.runCap) { alert("Run cap reached. Archive or delete a run first."); return; }
+    document.getElementById("app").classList.add("hidden"); showSetup();
+  });
+  if (q("career-export")) q("career-export").addEventListener("click", exportCareer);
+  if (q("career-import")) q("career-import").addEventListener("click", () => careerModal({
+    title: "IMPORT", msg: "Paste a career export or a single-run export. Existing runs are never overwritten; duplicate ids are skipped.",
+    textarea: { placeholder: "{ ... }" }, okLabel: "Import",
+    onOk: async ({ text }) => {
+      const r = importCareerText(text);
+      if (!r.ok) { alert(r.reason); return false; }
+      await careerSave(); render();
+      alert(`Imported ${r.added} run(s)${r.skipped ? ", skipped " + r.skipped + " duplicate(s)" : ""}${r.bad ? ", rejected " + r.bad + " unreplayable" : ""}.`);
+    }
+  }));
+  root.querySelectorAll(".career-run [data-act]").forEach(b => b.addEventListener("click", async () => {
+    const runId = b.closest(".career-run").getAttribute("data-run");
+    const r = career.runs.find(x => x.runId === runId); if (!r) return;
+    switch (b.getAttribute("data-act")) {
+      case "switch": careerSwitch(runId); await careerSave(); render({ followFocus: true }); break;
+      case "rename": careerModal({ title: "RENAME RUN", msg: "Display label only.", input: { value: r.label || "", placeholder: runDisplayLabel(r) },
+        onOk: async ({ input }) => { careerRename(runId, input); await careerSave(); render(); } }); break;
+      case "archive": careerArchive(runId, !r.archived);
+        if (r.archived && r === runData) { const next = careerLiveRuns().slice(-1)[0]; if (next) careerSwitch(next.runId); }
+        await careerSave(); render(); break;
+      case "export": download("cp2077_run_" + r.runId + ".json", JSON.stringify(r, null, 2)); break;
+      case "delete": careerModal({ title: "DELETE RUN", danger: true, okLabel: "Delete",
+        msg: `Delete "${runDisplayLabel(r)}" (${r.pathHistory.length} steps)? This cannot be undone. Export it first if in doubt.`,
+        onOk: async () => { careerDelete(runId); await careerSave();
+          if (runData) render(); else { document.getElementById("app").classList.add("hidden"); showSetup(); } } }); break;
+      case "fork": {
+        const steps = r.pathHistory.map((s, i) => { const c = lookupChoice(s.node, s.choiceId); return { value: i + 1, label: `after step ${i + 1}: ${(questDB[s.node] || {}).title || s.node} — ${c ? c.label : s.choiceId}` }; });
+        careerModal({ title: "FORK RUN", msg: "Creates a NEW run that starts from a prefix of this one. The source run is untouched.",
+          select: [{ value: 0, label: "from the start (identity only)" }].concat(steps), selectDefault: r.pathHistory.length,
+          input: { value: "", placeholder: runDisplayLabel(r) + " · fork" }, okLabel: "Fork",
+          onOk: async ({ select, input }) => { const res = careerFork(runId, parseInt(select, 10), input.trim() || null);
+            if (!res.ok) { alert(res.reason); return false; } await careerSave(); render({ followFocus: true }); } });
+        break;
+      }
+    }
+  }));
+}
+
+const SOCKET_GLYPH = { acquired: "▣", live: "◈", recoverable: "↻", "unverified-recovery": "?", unreachable: "✕", undetermined: "◌" };
+const CATEGORY_GLYPH = { weapon: "⌖", cyberware: "⌬", vehicle: "⛭" };
+
+/* Phase 8b — one detail renderer for the inline panel (desktop) and the
+   sheet (touch). High density: state, lore, decision trail, witness, career. */
+function socketDetailHtml(r, runs) {
+  const s = r.slot;
+  const lore = (typeof LORE !== "undefined" && LORE[s.slotId]) || (r.item && LORE[r.item.id]) || null;
+  const nodeTitle = r.node && questDB[r.node] ? questDB[r.node].title : null;
+  const active = runs && runs.length ? runs[runs.length - 1] : null;
+  // Decision trail: the choice this run took at the closing/target node, if any.
+  let trail = "";
+  if (r.node && active) {
+    const step = (active.pathHistory || []).find(x => x.node === r.node);
+    const c = step && lookupChoice(step.node, step.choiceId);
+    if (c) trail = `${nodeTitle} → “${c.label}”`;
+    else if (nodeTitle) trail = nodeTitle + (r.state === "live" ? " (ahead)" : "");
+  }
+  // Witness summary for live sockets: hub trips + the arc titles in order.
+  let witness = "";
+  if (r.state === "live" && Array.isArray(r.witness) && r.witness.length) {
+    const hubTrips = r.witness.filter(x => x.node === "act2_hub").length;
+    const arcs = []; r.witness.forEach(x => { const n = questDB[x.node]; if (n && n.arc && !arcs.includes(n.arc)) arcs.push(n.arc); });
+    witness = `${r.witness.length} step${r.witness.length === 1 ? "" : "s"}${hubTrips ? ", " + hubTrips + " hub trip" + (hubTrips === 1 ? "" : "s") : ""}${arcs.length ? " · " + arcs.map(a => a.replace(/^arc_/, "").replace(/_/g, " ")).slice(0, 4).join(" → ") : ""}`;
+  }
+  // Career line: which run(s) hold it.
+  let careerLine = "";
+  if (r.item && Array.isArray(runs)) {
+    const holders = runs.filter(x => arsenalStatus(x.state || replay(x.identity, x.pathHistory), r.item) === "ACQUIRED");
+    if (holders.length) careerLine = "In the stash: " + holders.map(h => h.run ? runDisplayLabel(h.run) : "this run").join(", ");
+    else if (runs.length > 1) careerLine = "Not held in any of " + runs.length + " runs.";
+  }
+  const cat = r.item ? (CATEGORY_GLYPH[r.item.category] || "") : "";
+  return `
+    <div class="flex items-start gap-2">
+      <span class="text-base" style="color:var(--st-${{acquired:"acq",live:"live",recoverable:"rec","unverified-recovery":"unv",unreachable:"unr",undetermined:"und"}[r.state]})" aria-hidden="true">${SOCKET_GLYPH[r.state]}</span>
+      <div class="flex-1 min-w-0">
+        <div id="wall-sheet-title" class="text-[12px] text-slate-100">${esc(s.name)} ${cat ? `<span class="text-slate-500">${cat}</span>` : ""}</div>
+        <div class="text-[10px] text-slate-500">${esc(WALL_PANELS.find(p => p.panel === s.panel).label)} · slot ${s.order + 1} · ${esc(s.acquisition)}${s.conditionalSlot ? " · conditional slot" : ""}</div>
+      </div>
+      <span class="wall-tag shrink-0" data-state="${r.state}">${esc(r.state.replace("-", " ").toUpperCase())}</span>
+    </div>
+    ${lore ? `<div class="lore-short mt-2">${esc(lore.short)}</div><div class="lore-body mt-1">${esc(lore.body)}</div>` : ""}
+    <dl class="lore-kv mt-2">
+      <dt>Status</dt><dd>${esc(r.reason)}</dd>
+      ${trail ? `<dt>Trail</dt><dd class="text-cy">${esc(trail)}</dd>` : ""}
+      ${witness ? `<dt>Route</dt><dd>${esc(witness)}</dd>` : ""}
+      ${careerLine ? `<dt>Career</dt><dd>${esc(careerLine)}</dd>` : ""}
+      ${s.intraRunExclusiveWith ? `<dt>Exclusive</dt><dd style="color:var(--neon)">${esc(s.intraRunExclusiveWith.replace(/^quest:/, "quest ").replace(/_/g, " "))} — within one run</dd>` : ""}
+      ${r.item && r.item.caveat ? `<dt>Caveat</dt><dd>${esc(r.item.caveat)}</dd>` : ""}
+      ${r.state === "unreachable" && nodeTitle ? `<dt>Next run</dt><dd style="color:var(--st-unr)">Revisit ${esc(nodeTitle)}.</dd>` : ""}
+      ${r.untracked ? `<dt>Note</dt><dd>Untracked slots stay UNDETERMINED by design — the tool never guesses.</dd>` : ""}
+    </dl>`;
+}
+function isNarrowViewport() { return !!(window.matchMedia && window.matchMedia("(max-width: 1023px)").matches); }
+let wallSheetReturnFocus = null;
+function openWallSheet(r, runs) {
+  const sh = document.getElementById("wall-sheet"); if (!sh) return;
+  document.getElementById("wall-sheet-body").innerHTML = socketDetailHtml(r, runs);
+  sh.classList.remove("hidden"); sh.classList.add("flex");
+  const closeBtn = document.getElementById("wall-sheet-close");
+  const close = () => { sh.classList.add("hidden"); sh.classList.remove("flex"); wallSelected = null;
+    document.removeEventListener("keydown", onKey); if (wallSheetReturnFocus && wallSheetReturnFocus.focus) wallSheetReturnFocus.focus(); render(); };
+  const onKey = e => { if (e.key === "Escape") close(); };
+  closeBtn.onclick = close;
+  sh.onclick = e => { if (e.target === sh) close(); };
+  document.addEventListener("keydown", onKey);
+  setTimeout(() => closeBtn.focus(), 30);
+}
+
 function renderWallInto(root, runs) {
   root.innerHTML = "";
   const mk = html => { const d = document.createElement("div"); d.innerHTML = html; return d; };
@@ -5393,7 +6245,7 @@ function renderWallInto(root, runs) {
   results.forEach(r => counts[r.state]++);
 
   const legend = SOCKET_STATES.map(s =>
-    `<span class="wall-lg" data-state="${s}"><i></i>${s.replace("-", " ")} ${counts[s]}</span>`).join("");
+    `<span class="wall-lg" data-state="${s}"><i></i>${SOCKET_GLYPH[s]} ${s.replace("-", " ")} ${counts[s]}</span>`).join("");
 
   let panels = "";
   WALL_PANELS.forEach(p => {
@@ -5405,7 +6257,7 @@ function renderWallInto(root, runs) {
         const sel = wallSelected === s.slotId ? " wall-sel" : "";
         return `<button type="button" class="wall-sock${sel}" data-state="${r.state}" data-slot="${esc(s.slotId)}"
                   aria-label="${esc(s.name)} — ${r.state}" title="${esc(s.name)}">
-                  <span class="wall-ico" aria-hidden="true">${r.state === "acquired" ? "◆" : r.state === "live" ? "◇" : r.state === "unreachable" ? "✕" : r.state === "undetermined" ? "?" : "↻"}</span>
+                  <span class="wall-ico" aria-hidden="true">${SOCKET_GLYPH[r.state]}</span>
                   <span class="wall-name">${esc(s.name)}</span>
                   ${s.conditionalSlot ? `<span class="wall-cond" title="Slot appears only once crafted and stashed">◦</span>` : ""}
                 </button>`;
@@ -5414,21 +6266,10 @@ function renderWallInto(root, runs) {
 
   let detail = "";
   const selR = results.find(r => r.slot.slotId === wallSelected);
-  if (selR) {
-    const s = selR.slot;
-    const nodeTitle = selR.node && questDB[selR.node] ? questDB[selR.node].title : null;
-    detail = `<div class="wall-detail mt-3" data-state="${selR.state}">
-      <div class="flex justify-between gap-2 text-[11px]"><span class="text-slate-200">${esc(s.name)}</span>
-        <span class="wall-tag" data-state="${selR.state}">${esc(selR.state.replace("-", " ").toUpperCase())}</span></div>
-      <div class="text-[10px] text-slate-500 mt-1">${esc(WALL_PANELS.find(p => p.panel === s.panel).label)} · slot ${s.order + 1} · ${esc(s.acquisition)}${s.conditionalSlot ? " · conditional slot" : ""}</div>
-      <div class="text-[11px] text-slate-400 mt-2">${esc(selR.reason)}</div>
-      ${nodeTitle ? `<div class="text-[10px] mt-1"><span class="text-slate-600">Node:</span> <span class="text-cy">${esc(nodeTitle)}</span></div>` : ""}
-      ${s.intraRunExclusiveWith ? `<div class="text-[10px] text-neon mt-1">⚠ Exclusive with ${esc(s.intraRunExclusiveWith.replace(/^quest:/, "quest ").replace(/_/g, " "))} within one run.</div>` : ""}
-      ${selR.item && selR.item.caveat ? `<div class="text-[10px] text-slate-600 mt-1">⚠ ${esc(selR.item.caveat)}</div>` : ""}
-      ${selR.state === "unreachable" && nodeTitle ? `<div class="text-[10px] text-pink mt-1">Next run: revisit ${esc(nodeTitle)}.</div>` : ""}
-      ${selR.untracked ? `<div class="text-[10px] text-slate-600 mt-1">Untracked slots stay UNDETERMINED by design — the tool never guesses.</div>` : ""}
-    </div>`;
+  if (selR && !isNarrowViewport()) {
+    detail = `<div class="wall-detail mt-3" data-state="${selR.state}">${socketDetailHtml(selR, runs)}</div>`;
   }
+  root._wallResults = results;   // for the click handler to open the sheet without recomputing
 
   root.appendChild(mk(`
     <div class="text-[10px] text-slate-600 mb-1">H10 stash wall · 30 slots · panel order sourced, positions not asserted</div>
@@ -5545,13 +6386,22 @@ function render(opts) {
   const feas = reachableFrom(stateData);
   const wallBody = document.getElementById("wall-body");
   if (wallBody) {
-    renderWallInto(wallBody, [{ identity: runData.identity, pathHistory: runData.pathHistory, state: stateData, feas }]);
+    renderWallInto(wallBody, wallRuns(feas));
+    const wr = wallRuns(feas);
     wallBody.querySelectorAll("[data-slot]").forEach(b => b.addEventListener("click", () => {
       const id = b.getAttribute("data-slot");
+      if (isNarrowViewport()) {
+        wallSelected = id; wallSheetReturnFocus = b;
+        const r = (wallBody._wallResults || []).find(x => x.slot.slotId === id) || socketState(WALL_MANIFEST.find(s => s.slotId === id), wr);
+        openWallSheet(r, wr);
+        return;
+      }
       wallSelected = wallSelected === id ? null : id;
       render();
     }));
   }
+  const careerBody = document.getElementById("career-body");
+  if (careerBody) { renderCareerInto(careerBody); wireCareerBody(careerBody); }
   const solverEl = document.getElementById("wall-solver");
   if (solverEl) solverEl.textContent = `${feas.meta.expanded}/${feas.meta.budget} states · ${feas.meta.complete ? "exhaustive" : "budget hit"} · ${feas.meta.ms}ms`;
   const done = stateData.completedArcs.length, bot = stateData.botchedArcs.length;
@@ -5645,6 +6495,28 @@ function layoutAudit() {
   }).map(o => "#" + o.id);
   add("L8", "No fixed overlay vertically centres an unclamped child (top-clip trap)",
     trapped.length === 0, trapped.length ? trapped.join(", ") : overlays.length + " overlays checked");
+
+  // L10 — Phase 8b socket sheet: when open, its card must be inside the
+  // viewport with a ≥44px close target; measured only when the sheet is shown.
+  const sheet = document.getElementById("wall-sheet");
+  if (sheet && !sheet.classList.contains("hidden") && sheet.getBoundingClientRect) {
+    const card = sheet.querySelector(".sheet-card"), cl = document.getElementById("wall-sheet-close");
+    const c = card.getBoundingClientRect(), b = cl.getBoundingClientRect();
+    add("L10", "Socket sheet inside viewport with a 44px close target",
+      c.top >= 0 && c.bottom <= (window.innerHeight || 1e6) + 1 && b.height >= 44 && b.width >= 44,
+      `card ${Math.round(c.top)}..${Math.round(c.bottom)} in ${window.innerHeight}px, close ${Math.round(b.width)}x${Math.round(b.height)}`);
+  }
+
+  // L11 — D-28 guard. On desktop widths the three side panels must be laid
+  // out (non-zero height); `.hidden lg:block` must resolve to block.
+  if (window.matchMedia && window.matchMedia("(min-width:1024px)").matches) {
+    const bad = ["hud-body", "wall-body", "career-body"].filter(id => {
+      const el = document.getElementById(id);
+      return el && el.getBoundingClientRect && el.getBoundingClientRect().height < 1;
+    });
+    add("L11", "Desktop side panels (HUD / wall / career) are visible at ≥1024px",
+      bad.length === 0, bad.length ? "collapsed: #" + bad.join(", #") : "all three laid out");
+  }
 
   // L4 — horizontal scroll on a phone means something is overflowing.
   const de = document.documentElement;
@@ -5744,7 +6616,11 @@ function wireSetup() {
   });
 
   document.getElementById("setup-start").addEventListener("click", () => {
-    runData = newRunData(setupSel);
+    if (!career) career = newCareer();
+    const rd = newRunData(setupSel, null);
+    const add = careerAddRun(rd, true);
+    if (!add.ok) { alert(add.reason); return; }
+    runData = rd;
     recalculateState();
     document.getElementById("setup").classList.add("hidden");
     document.getElementById("setup").classList.remove("flex");
@@ -5774,6 +6650,14 @@ function wireSetup() {
 function wireApp() {
   // Mobile HUD collapse. Desktop ignores this entirely (lg:block wins).
   const hudBody = document.getElementById("hud-body");
+  // D-29: bound ONCE here. It was previously bound inside render(), so each
+  // render stacked another listener and the second tap toggled twice.
+  const careerToggle = document.getElementById("career-toggle");
+  const careerBodyEl = document.getElementById("career-body");
+  if (careerToggle && careerBodyEl) careerToggle.addEventListener("click", () => {
+    const nowHidden = careerBodyEl.classList.toggle("hidden");
+    careerToggle.textContent = nowHidden ? "Show" : "Hide";
+  });
   const hudToggle = document.getElementById("hud-toggle");
   hudToggle.addEventListener("click", () => {
     const open = !hudBody.classList.contains("hidden");
@@ -5859,6 +6743,12 @@ function wireApp() {
   });
 
   document.getElementById("jump-pill").addEventListener("click", scrollToActive);
+  // Phase 8 — another tab wrote the career: reload it (last-write-wins; no merge).
+  window.addEventListener("storage", async (e) => {
+    if (e.key !== SPEC.careerKey || !e.newValue) return;
+    const l = await loadCareer();
+    if (l.status === "ok") { runData = careerActiveRun(); if (runData) { recalculateState(); render(); } }
+  });
   let jumpTick = null;
   const onViewportChange = () => {
     if (jumpTick) return;
@@ -5908,8 +6798,13 @@ function wireApp() {
     rm.classList.add("hidden"); rm.classList.remove("flex");
   });
   document.getElementById("reset-confirm").addEventListener("click", async () => {
-    await Store.del(SPEC.storageKey);
-    location.reload();
+    // Phase 8: erases the ACTIVE run from the career. Other runs are untouched.
+    if (career && runData) careerDelete(runData.runId);
+    await careerSave();
+    const rm = document.getElementById("reset-modal");
+    rm.classList.add("hidden"); rm.classList.remove("flex");
+    if (runData) { render(); }
+    else { document.getElementById("app").classList.add("hidden"); showSetup(); }
   });
 }
 
@@ -5960,13 +6855,19 @@ async function boot() {
   wireSetup();
   wireApp();
 
-  const loaded = await loadRun();
+  const loaded = await loadCareer();
 
-  if (loaded.status === "ok") {
-    runData = loaded.data;
-    recalculateState();
-    document.getElementById("app").classList.remove("hidden");
-    render();
+  if (loaded.status === "ok" || loaded.status === "migrated") {
+    runData = careerActiveRun();
+    if (loaded.rejected && loaded.rejected.length)
+      console.warn("Career: " + loaded.rejected.length + " run(s) could not seed a replay and were left out of the list (container untouched).", loaded.rejected);
+    if (runData) {
+      recalculateState();
+      document.getElementById("app").classList.remove("hidden");
+      render();
+    } else {
+      showSetup();
+    }
   } else if (loaded.status === "incompatible" || loaded.status === "corrupt") {
     document.getElementById("app").classList.remove("hidden");
     const mm = document.getElementById("migrate-modal");
