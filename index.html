@@ -60,6 +60,13 @@ ul{margin:0;padding:0;list-style:none;}
 button{font-family:inherit;font-size:inherit;color:inherit;background:none;border:0;cursor:pointer;}
 button:disabled{cursor:not-allowed;}
 code{font-family:var(--mono);font-size:.92em;}
+/* D-31: form controls do NOT inherit `color` from body, so text <input>s fell
+   back to the UA default (near-black) on the bg-void field — typed text was
+   invisible while the lighter placeholder still showed. Colour every control
+   explicitly; caret and placeholder to match. Textarea keeps its mono face. */
+input,select,textarea{color:var(--t-body);caret-color:var(--cy);}
+input::placeholder,textarea::placeholder{color:var(--t-faint);opacity:1;}
+select option{color:var(--t-body);background:var(--void);}
 textarea{font-family:var(--mono);color:var(--t-body);}
 
 /* Display face for headings and chrome. */
@@ -96,6 +103,28 @@ button{font-family:var(--ui);}
 .wall-sock .wall-name{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .wall-sock .wall-cond{position:absolute;top:1px;right:3px;font-size:9px;color:#94a3b8;}
 .wall-sock:hover,.wall-sock.wall-sel{outline:1px solid var(--neon);outline-offset:-1px;}
+/* ═══════════════════════════════════════════════════════════════════════
+   MOBILE READABILITY (D-32, revised after device feedback). The first cut
+   lifted EVERY small grey inside the content containers — names, labels and
+   blurbs all landed on one tone/weight and the hierarchy flattened ("looks
+   worse"). Revised: true reading lines are TAGGED (.rt / .rt-dim) at the
+   render sites; names, labels, buttons and chrome keep their original greys.
+   No size change anywhere. AA on #050508: --rt-mid ≈8.2:1, --rt-dim ≈6.6:1.
+   ═══════════════════════════════════════════════════════════════════════ */
+:root{--rt-dim:#9fabbe;--rt-mid:#b4c0d1;--edge-int:#5d6f92;}
+/* Lever 3 (Shabab-approved on device): reading floor 10px→11px, touch only.
+   Desktop identical by construction. */
+@media (pointer: coarse){
+  .text-\[10px\]{font-size:11px;line-height:1.5;}
+  .text-\[10px\].rt,.text-\[10px\].rt-dim{font-size:13px;line-height:1.55;}
+  .text-xs.rt,.lore-body{font-size:15px;line-height:1.55;}
+  .lore-kv{font-size:13px;}
+  .rt,.rt-dim{font-weight:460;letter-spacing:.005em;}
+}
+.rt{color:var(--rt-mid)!important;font-weight:500;letter-spacing:.01em;-webkit-font-smoothing:antialiased;}
+.rt-dim{color:var(--rt-dim)!important;font-weight:500;letter-spacing:.01em;-webkit-font-smoothing:antialiased;}
+.lore-short{letter-spacing:.015em;}
+
 /* Six-state Kiroshi palette. Every state differs by HUE and by TREATMENT
    (fill / solid / dashed / dotted) and carries a glyph — never colour alone.
    Contrast on the void background: gold-fill text 14:1, cyan 10:1, green 9:1,
@@ -121,9 +150,9 @@ button{font-family:var(--ui);}
 .wall-tag[data-state="recoverable"]{color:var(--st-rec)}.wall-tag[data-state="unverified-recovery"]{color:var(--st-unv)}
 .wall-tag[data-state="unreachable"]{color:var(--st-unr)}.wall-tag[data-state="undetermined"]{color:var(--st-und)}
 .lore-short{color:#e2e8f0;font-size:11px;letter-spacing:.02em;}
-.lore-body{color:#94a3b8;font-size:10px;line-height:1.5;border-left:2px solid var(--edge);padding-left:8px;}
+.lore-body{color:var(--rt-mid);font-size:10px;line-height:1.5;border-left:2px solid var(--edge);padding-left:8px;}
 .lore-kv{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:10px;}
-.lore-kv dt{color:#64748b;}.lore-kv dd{color:#cbd5e1;margin:0;}
+.lore-kv dt{color:var(--rt-dim);}.lore-kv dd{color:#cbd5e1;margin:0;}
 @media (pointer:coarse){.wall-sock{min-height:52px;}}
 /* Socket sheet — bottom sheet on narrow viewports (below the lg breakpoint,
    where the wall detail would otherwise sit far below the fold). The card is
@@ -143,6 +172,30 @@ button{font-family:var(--ui);}
 .career-run.career-archived{opacity:.55;}
 .cr-btn{border:1px solid var(--edge);padding:4px 8px;font-size:10px;color:#94a3b8;background:transparent;}
 .cr-btn:hover{border-color:var(--cy);color:var(--cy);}
+/* D-34/D-35: tappables must LOOK tappable — on EVERY pointer type (the 8.5 cut
+   was accidentally scoped inside a coarse media block: phones got a too-faint
+   2.29:1 edge, desktop got nothing). Interactive elements: solid edge at the
+   interactive token + a faint fill so they read as raised surfaces. Static
+   spoiler chips (revealed, inert) are EXCLUDED — cueing a tap where none
+   exists is the inverse defect. Coloured state borders untouched. */
+.spoiler-chip:not(.spoiler-static){border-style:solid;border-color:var(--edge-int);}
+:is(button,[role="button"]).border-edge{border-color:var(--edge-int);}
+.cr-btn{border-color:var(--edge-int);}
+[data-choice]{border-color:var(--edge-int);}
+:is(button,[role="button"]).border-edge,.cr-btn,.spoiler-chip:not(.spoiler-static),[data-choice]{background-color:rgba(180,192,209,.035);}
+@media (pointer: coarse){
+  :is(button,[role="button"]).border-edge,.cr-btn,.spoiler-chip:not(.spoiler-static),[data-choice]{border-width:1.5px;}
+}
+/* D-36 — auto-hide command bar. The header holds session-boundary actions, not
+   per-choice ones; pinning it permanently costs ~30% of a phone viewport while
+   reading a long run. Standard mobile-chrome behaviour instead: slide away on
+   downward scroll, return on any upward flick or at top. All pointer types
+   (Shabab-approved for desktop too). A FAILING banner pins the whole header —
+   a failure that scrolls out of sight defeats its purpose. */
+#app-header{transition:transform .18s ease-out;will-change:transform;}
+#app-header.hdr-hidden{transform:translateY(-100%);}
+#app-header.hdr-pinned{transform:none!important;}
+@media (prefers-reduced-motion: reduce){#app-header{transition:none;}}
 .cr-btn.cr-danger:hover{border-color:var(--pink);color:var(--pink);}
 @media (pointer:coarse){.cr-btn{min-height:32px;padding:6px 10px;}}
 
@@ -400,7 +453,7 @@ setTimeout(function(){
   <div class="w-full max-w-2xl border border-edge bg-panel clip-notch p-6 md:p-8">
 
     <div class="flex items-center gap-2 mb-1"><span class="text-cy text-xs">TACTICAL RUN MANAGER</span>
-      <span id="build-stamp" class="ml-auto text-[10px] border border-edge px-2 py-0.5 text-slate-500">BUILD 8.1 · 2026-08-16</span></div>
+      <span id="build-stamp" class="ml-auto text-[10px] border border-edge px-2 py-0.5 text-slate-500"></span></div>
     <h1 class="text-xl md:text-2xl text-neon mb-1">RUN SETUP</h1>
     <p class="text-sm text-slate-400 mb-4">Every downstream gate depends on these four values. They cannot be changed without resetting the run.</p>
 
@@ -469,11 +522,11 @@ setTimeout(function(){
 <!-- ══════════════════ APP SHELL ══════════════════ -->
 <div id="app" class="hidden">
 
-  <header class="border-b border-edge bg-panel/80 backdrop-blur sticky top-0 z-30">
+  <header id="app-header" class="border-b border-edge bg-panel/80 backdrop-blur sticky top-0 z-30">
     <div class="max-w-[1600px] mx-auto px-3 sm:px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
       <h1 class="text-cy text-sm md:text-base">CP2077 <span class="text-neon">TACTICAL RUN MANAGER</span></h1>
       <span class="text-[10px] border border-edge px-2 py-1 text-slate-500">SCHEMA v3.1</span>
-      <span class="text-[10px] border border-edge px-2 py-1 text-slate-500">v3.1 · BUILD 8.1</span>
+      <span id="build-stamp-setup" class="text-[10px] border border-edge px-2 py-1 text-slate-500"></span>
       <span id="store-mode" class="text-[10px] border border-edge px-2 py-1 text-slate-500"></span>
       <div class="ml-auto flex flex-wrap gap-2">
         <button id="btn-shield" class="text-xs border border-edge px-3 py-1.5 hover:border-neon" aria-pressed="false">Spoiler shield: OFF</button>
@@ -4016,6 +4069,40 @@ function validateDB() {
   // V15 — Phase 6. Herold recovery claims must be explicit about verification.
   // A herold entry without a boolean recoveryVerified silently defaults into
   // one bucket or the other, which is exactly the ambiguity the audit removes.
+  // V22 — D-31 class. A text control on a dark field (bg-void/bg-panel) with no
+  // explicit colour inherits the UA default (dark) → invisible text. Static scan
+  // of the source so the shim harness catches it with no browser. The global
+  // `input,select,textarea{color}` rule satisfies this for every control at once;
+  // the rule's presence is what we assert (belt: per-control class OR the global rule).
+  add("V22", "Text inputs/areas are not left to inherit a dark default on a dark field",
+    (() => {
+      // Robust source: shim provides __RAW_SOURCE__ (its DOM stub has no
+      // outerHTML — V22 was VACUOUSLY passing against "undefined" until D-35);
+      // live DOM falls back to outerHTML.
+      const html = (typeof __RAW_SOURCE__ === "string" && __RAW_SOURCE__)
+                || (document.documentElement && document.documentElement.outerHTML) || "";
+      if (!html) return ["no source available to scan"];
+      const hasGlobalRule = /input\s*,\s*select\s*,\s*textarea\s*\{[^}]*color\s*:/.test(html)
+                         || /(^|[^.\w-])input[^{]*\{[^}]*color\s*:/.test(html);
+      if (hasGlobalRule) return [];
+      // Fall back to per-control audit only if there is no global rule.
+      return [...document.querySelectorAll("input:not([type=file]),textarea")]
+        .filter(el => /bg-void|bg-panel/.test(el.className) && !/text-(hi|body|mid|cy|neon)/.test(el.className))
+        .map(el => el.id || el.className);
+    })());
+
+  // V23 — D-35c. All "BUILD 8.x" literals in the document (source const +
+  // rendered spans) must be identical; a diverged stamp is a shipped lie.
+  add("V23", "Build stamp is single-source — all BUILD literals identical",
+    (() => {
+      const s = (typeof __RAW_SOURCE__ === "string" && __RAW_SOURCE__)
+             || (document.documentElement && document.documentElement.outerHTML) || "";
+      if (!s) return ["no source available to scan"];
+      const m = s.match(/BUILD 8\.\d+/g) || [];
+      const u = [...new Set(m)];
+      return u.length <= 1 ? [] : u;
+    })());
+
   add("V15", "Every recovery:'herold' entry declares recoveryVerified as a boolean",
     arsenalRegistry.filter(i => i.recovery === "herold" && typeof i.recoveryVerified !== "boolean")
                    .map(i => i.id));
@@ -5662,6 +5749,29 @@ GOLDEN.push({
   }
 });
 
+GOLDEN.push({
+  id: "G39_contrast_compositing",
+  desc: "Contrast math composites alpha: light text over a faint tint on the dark field must read as HIGH contrast (the naive solid-read gave 1.13)",
+  run() {
+    const body = [203, 213, 225];                          // --t-body
+    const tint = [253, 224, 71, .08];                      // the false-positive wash
+    const panel = [11, 11, 18, 1];
+    const composited = compositeStack([tint, panel]);      // top-most first
+    assert(composited[0] < 40 && composited[1] < 40, "8% yellow over panel must stay near-black, got " + composited.map(Math.round));
+    const good = contrastRatio(body, composited);
+    assert(good >= 10, "composited contrast must be high, got " + good.toFixed(2));
+    const naiveSolid = contrastRatio(body, [253, 224, 71]);
+    assert(naiveSolid < 2, "the naive solid-yellow read is the 1.13-class bug: " + naiveSolid.toFixed(2));
+    // Opaque layer wins regardless of what sits beneath.
+    const opaque = compositeStack([[5, 5, 8, 1], [255, 255, 255, 1]]);
+    assert(opaque.join() === "5,5,8", "an opaque top layer must mask lower layers");
+    // Reading tokens clear AA on the void.
+    assert(contrastRatio([159, 171, 190], [5, 5, 8]) >= 7, "--rt-dim must clear AA+");
+    assert(contrastRatio([180, 192, 209], [5, 5, 8]) >= 9, "--rt-mid must clear AA+");
+    assert(contrastRatio([93, 111, 146], [5, 5, 8]) >= 3, "--edge-int must clear WCAG 1.4.11 non-text 3:1");
+  }
+});
+
 function assert(cond, msg) { if (!cond) throw new Error(msg); }
 
 function runGoldenTests() {
@@ -5706,6 +5816,9 @@ function scrollToActive() {
   // stale offsets on mobile Safari.
   requestAnimationFrame(() => requestAnimationFrame(() => {
     const top = el.getBoundingClientRect().top + window.pageYOffset - headerOffset();
+    window.__suppressAutoHide = true;
+    clearTimeout(window.__suppressT);
+    window.__suppressT = setTimeout(() => { window.__suppressAutoHide = false; }, reduce ? 80 : 650);
     window.scrollTo({ top: Math.max(0, top), behavior: reduce ? "auto" : "smooth" });
     setTimeout(updateJumpPill, reduce ? 0 : 420);
   }));
@@ -5782,7 +5895,7 @@ function renderFlowInto(container, proj, state, interactive) {
           ${card.active ? `<span class="text-[10px] text-neon">◂ CURRENT</span>` : ""}
         </div>
         <h3 class="text-sm ${card.active ? "text-neon" : "text-cy"} mb-1">${esc(def.title)}</h3>
-        <p class="text-xs text-slate-500 mb-3">${
+        <p class="text-xs rt mb-3">${
           card.active && def.type !== "NEXUS HUB"
             ? spoilerMask(card.node + "|desc", esc(def.desc))
             : esc(def.desc)}</p>`;
@@ -5845,7 +5958,7 @@ function renderFlowInto(container, proj, state, interactive) {
               <span class="${blocked ? "text-slate-700" : "text-cy"}">${blocked ? "✕" : "▸"}</span>
               <div class="flex-1">
                 <div>${esc(c.label)}${takenHere ? ` <span class="text-[10px] text-slate-600">(taken)</span>` : ""}</div>
-                ${c.desc ? `<div class="text-[10px] text-slate-600 mt-0.5">${
+                ${c.desc ? `<div class="text-[10px] rt-dim mt-0.5">${
                   takenHere ? esc(c.desc) : spoilerMask(card.node + "|" + c.id + "|desc", esc(c.desc), blocked)
                 }</div>` : ""}
                 ${c.next === null ? `<div class="text-[10px] text-slate-600 mt-0.5">terminal</div>` : ""}
@@ -5965,7 +6078,7 @@ function renderHudInto(root, state) {
     return `<div class="mt-2">
       <div class="${colour} text-[10px] mb-1">${esc(label)} — ${items.length}${note ? ' · ' + esc(note) : ""}</div>
       ${items.map(i => `<div class="text-[11px] text-slate-400 pl-2">${esc(i.name)}${
-        i.caveat ? `<div class="text-[10px] text-slate-600 pl-2">⚠ ${esc(i.caveat)}</div>` : ""
+        i.caveat ? `<div class="text-[10px] rt-dim pl-2">⚠ ${esc(i.caveat)}</div>` : ""
       }</div>`).join("")}
     </div>`;
   };
@@ -6014,15 +6127,15 @@ function renderHudInto(root, state) {
         <span class="${t.resolved ? "text-slate-600" : "text-cy"} shrink-0">${t.resolved ? "RESOLVED" : "AHEAD"}${
           !t.resolved && t.arc && t.arc === activeArc ? " ◂ current arc" : ""}</span>
       </div>
-      <div class="text-[10px] text-slate-500">Window: ${esc(t.window)}</div>
-      <div class="text-[10px] text-slate-500">Starts: ${esc(t.trigger)}</div>
-      <div class="text-[10px] text-slate-500">On miss: ${esc(t.consequence)}${
+      <div class="text-[10px] rt">Window: ${esc(t.window)}</div>
+      <div class="text-[10px] rt">Starts: ${esc(t.trigger)}</div>
+      <div class="text-[10px] rt">On miss: ${esc(t.consequence)}${
         t.cascades.length ? " — cascades to " + t.cascades.map(esc).join(", ") : ""}</div>
     </div>`).join("")
     : `<span class="text-[10px] text-slate-600">No timing windows declared in the database.</span>`;
 
   root.appendChild(mk(`<div class="mt-4 text-[11px] text-slate-400 mb-1">TIMING WINDOWS — DECLARED</div>
-    <div class="text-[10px] text-slate-600 mb-2">Static list from the quest database. NOT a live countdown — this tool
+    <div class="text-[10px] rt-dim mb-2">Static list from the quest database. NOT a live countdown — this tool
     cannot see in-game time. Live arming arrives with the Phase 7 feasibility engine.</div>
     <div class="space-y-2">${radar}</div>`));
 
@@ -6077,7 +6190,7 @@ function renderCareerInto(root) {
         <span class="text-[11px] ${active ? "text-neon" : "text-slate-200"}">${esc(runDisplayLabel(r))}${active ? " ◂ active" : ""}${r.archived ? " (archived)" : ""}</span>
         <span class="ml-auto text-[10px] text-slate-600">${st.pathHistory.length} steps</span>
       </div>
-      <div class="text-[10px] text-slate-500">${esc(idc)} · Act ${act} · iconics ${ico}/${arsenalRegistry.length} · ${e ? '<span class="text-cy">' + esc(ENDING_LABELS[e] || e) + '</span>' : "in progress"}</div>
+      <div class="text-[10px] rt">${esc(idc)} · Act ${act} · iconics ${ico}/${arsenalRegistry.length} · ${e ? '<span class="text-cy">' + esc(ENDING_LABELS[e] || e) + '</span>' : "in progress"}</div>
       <div class="flex flex-wrap gap-1 mt-1">
         ${active ? "" : `<button class="cr-btn" data-act="switch">Switch</button>`}
         <button class="cr-btn" data-act="rename">Rename</button>
@@ -6090,7 +6203,7 @@ function renderCareerInto(root) {
   }).join("");
 
   root.appendChild(mk(`
-    <div class="text-[10px] text-slate-600 mb-2">Every ending, every V. All figures replayed from saved runs — nothing here is stored (I6).</div>
+    <div class="text-[10px] rt-dim mb-2">Every ending, every V. All figures replayed from saved runs — nothing here is stored (I6).</div>
     <div class="text-[11px] text-slate-400 mb-1">ENDING COVERAGE — ${covered}/7</div>
     <div class="space-y-0.5 mb-3">${coverage}</div>
     <div class="flex items-center gap-2 mb-1"><span class="text-[11px] text-slate-400">RUNS</span>
@@ -6099,7 +6212,7 @@ function renderCareerInto(root) {
       <button id="career-import" class="cr-btn">Import</button></div>
     ${capNote}
     <div class="space-y-2 mt-2">${rows || '<div class="text-[10px] text-slate-600">No runs yet.</div>'}</div>
-    ${career.migratedFrom ? `<div class="text-[10px] text-slate-600 mt-3">Migrated from a single-run save; the legacy copy is kept as a backup and never deleted by the app.</div>` : ""}`));
+    ${career.migratedFrom ? `<div class="text-[10px] rt-dim mt-3">Migrated from a single-run save; the legacy copy is kept as a backup and never deleted by the app.</div>` : ""}`));
 }
 
 /* Modal driver — one overlay, four jobs. */
@@ -6205,7 +6318,7 @@ function socketDetailHtml(r, runs) {
       <span class="text-base" style="color:var(--st-${{acquired:"acq",live:"live",recoverable:"rec","unverified-recovery":"unv",unreachable:"unr",undetermined:"und"}[r.state]})" aria-hidden="true">${SOCKET_GLYPH[r.state]}</span>
       <div class="flex-1 min-w-0">
         <div id="wall-sheet-title" class="text-[12px] text-slate-100">${esc(s.name)} ${cat ? `<span class="text-slate-500">${cat}</span>` : ""}</div>
-        <div class="text-[10px] text-slate-500">${esc(WALL_PANELS.find(p => p.panel === s.panel).label)} · slot ${s.order + 1} · ${esc(s.acquisition)}${s.conditionalSlot ? " · conditional slot" : ""}</div>
+        <div class="text-[10px] rt">${esc(WALL_PANELS.find(p => p.panel === s.panel).label)} · slot ${s.order + 1} · ${esc(s.acquisition)}${s.conditionalSlot ? " · conditional slot" : ""}</div>
       </div>
       <span class="wall-tag shrink-0" data-state="${r.state}">${esc(r.state.replace("-", " ").toUpperCase())}</span>
     </div>
@@ -6272,7 +6385,7 @@ function renderWallInto(root, runs) {
   root._wallResults = results;   // for the click handler to open the sheet without recomputing
 
   root.appendChild(mk(`
-    <div class="text-[10px] text-slate-600 mb-1">H10 stash wall · 30 slots · panel order sourced, positions not asserted</div>
+    <div class="text-[10px] rt-dim mb-1">H10 stash wall · 30 slots · panel order sourced, positions not asserted</div>
     <div class="flex flex-wrap gap-x-3 gap-y-1 text-[10px]">${legend}</div>
     ${panels}${detail}
     <div class="text-[10px] text-slate-600 mt-3">Career view of ${runs.length} run${runs.length === 1 ? "" : "s"}. Solver: reachability proven by witness, unreachability by proof or exhaustion; anything else reads undetermined.</div>`));
@@ -6423,6 +6536,45 @@ let QA = { validate: [], golden: [] };
    in the real browser, on the real render, and reports geometry failures
    the same way the schema rules report data failures.
    ═══════════════════════════════════════════════════════════════════════ */
+/* D-33 — colour math for the contrast rules. The first cut read
+   `rgba(253,224,71,.08)` as SOLID yellow (alpha ignored), so light text over a
+   faint tint computed 1.13:1 and tripped a false LAYOUT FAILURE on device.
+   Pure and unit-tested (G39): composite translucent layers top-over-bottom
+   until opaque, then WCAG relative luminance on the result. */
+function parseColor(str) {
+  const m = (str || "").match(/[\d.]+/g);
+  if (!m || m.length < 3) return null;
+  return [parseFloat(m[0]), parseFloat(m[1]), parseFloat(m[2]), m.length >= 4 ? parseFloat(m[3]) : 1];
+}
+function compositeStack(stack) {           // stack: top-most first; returns opaque [r,g,b]
+  let out = null;
+  for (let i = stack.length - 1; i >= 0; i--) {   // bottom-up
+    const c = stack[i]; if (!c) continue;
+    if (!out || c[3] >= 1) { out = [c[0], c[1], c[2]]; continue; }
+    out = [0, 1, 2].map(k => c[k] * c[3] + out[k] * (1 - c[3]));
+  }
+  return out || [5, 5, 8];                 // app void as the final fallback
+}
+function relLum(rgb) {
+  const f = v => { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); };
+  return .2126 * f(rgb[0]) + .7152 * f(rgb[1]) + .0722 * f(rgb[2]);
+}
+function contrastRatio(fgRgb, bgRgb) {
+  const A = relLum(fgRgb), B = relLum(bgRgb);
+  return (Math.max(A, B) + .05) / (Math.min(A, B) + .05);
+}
+function effectiveContrast(el) {           // live DOM only
+  const cs = getComputedStyle(el);
+  const fg = parseColor(cs.color); if (!fg) return 21;
+  const stack = []; let n = el;
+  while (n && n !== document.documentElement) {
+    const bg = parseColor(getComputedStyle(n).backgroundColor);
+    if (bg && bg[3] > 0) { stack.push(bg); if (bg[3] >= 1) break; }
+    n = n.parentElement;
+  }
+  return contrastRatio([fg[0], fg[1], fg[2]], compositeStack(stack));
+}
+
 function layoutAudit() {
   const out = [];
   const add = (id, desc, pass, detail) => out.push({ id, desc, pass, detail: detail || "" });
@@ -6456,18 +6608,20 @@ function layoutAudit() {
   // is where this project's defects live; assert the panel does not overflow.
   const hud = document.getElementById("hud-body");
   if (hud && hud.scrollWidth !== undefined) {
+    const hudShown = !hud.getBoundingClientRect || hud.getBoundingClientRect().height > 0;
     add("L9", "Telemetry panel content does not overflow horizontally",
-      hud.scrollWidth <= hud.clientWidth + 1,
-      hud.scrollWidth + "px content in " + hud.clientWidth + "px panel");
+      !hudShown || hud.scrollWidth <= hud.clientWidth + 1,
+      hudShown ? hud.scrollWidth + "px content in " + hud.clientWidth + "px panel" : "collapsed — not measured");
   }
 
   // L6 — Phase 7 wall grid: no horizontal overflow, and every socket meets
   // the coarse-pointer touch target on phone widths.
   const wall = document.getElementById("wall-body");
   if (wall && wall.scrollWidth !== undefined) {
+    const wallShown = !wall.getBoundingClientRect || wall.getBoundingClientRect().height > 0;
     add("L6", "Ghost Wall does not overflow horizontally",
-      wall.scrollWidth <= wall.clientWidth + 1,
-      wall.scrollWidth + "px content in " + wall.clientWidth + "px panel");
+      !wallShown || wall.scrollWidth <= wall.clientWidth + 1,
+      wallShown ? wall.scrollWidth + "px content in " + wall.clientWidth + "px panel" : "collapsed — not measured");
     const socks = wall.querySelectorAll ? [...wall.querySelectorAll(".wall-sock")] : [];
     // Only measure when the wall is actually laid out — on phones the panel is
     // collapsed by default and hidden elements measure 0px, which is not a
@@ -6518,6 +6672,85 @@ function layoutAudit() {
       bad.length === 0, bad.length ? "collapsed: #" + bad.join(", #") : "all three laid out");
   }
 
+  // L12 — D-31 guard (alpha-correct since D-33). Every visible text control
+  // must paint its text with real contrast against its composited field.
+  if (typeof window !== "undefined" && window.getComputedStyle) {
+    const bad = [];
+    document.querySelectorAll("input:not([type=file]), textarea").forEach(el => {
+      if (el.offsetParent === null) return;
+      const r = effectiveContrast(el);
+      if (r < 3) bad.push((el.id || "input") + " " + r.toFixed(2));
+    });
+    add("L12", "Text inputs render text with contrast against their field", bad.length === 0, bad.join(" · "));
+  }
+
+  // L13 — D-32 guard, revised for D-33. Reading text is now TAGGED (.rt,
+  // .rt-dim, .lore-body), so the rule samples exactly those, with
+  // alpha-composited backgrounds. No heuristics, no chrome exclusions needed.
+  if (typeof window !== "undefined" && window.getComputedStyle) {
+    const bad = [];
+    document.querySelectorAll(".rt, .rt-dim, .lore-body, .lore-kv dt").forEach(el => {
+      if (el.offsetParent === null || !el.textContent.trim()) return;
+      const r = effectiveContrast(el);
+      if (r < 4.5) bad.push((el.className.split(" ").filter(Boolean)[0] || el.tagName.toLowerCase()) + " " + r.toFixed(2));
+    });
+    add("L13", "Tagged reading text clears AA-normal contrast (alpha-composited)",
+      bad.length === 0, bad.slice(0, 5).join(" · ") || (document.querySelectorAll(".rt,.rt-dim").length + " reading nodes checked"));
+  }
+
+  // L14 — D-34 guard. Every visible, enabled tappable must carry a visible
+  // affordance: a bordered edge with real alpha, or a fill distinct from the
+  // field. Prevents "is this text or a button?" regressions.
+  if (typeof window !== "undefined" && window.getComputedStyle) {
+    const bad = []; let n = 0;
+    document.querySelectorAll("button, [data-choice], [data-reveal], .spoiler-chip, .wall-sock").forEach(el => {
+      if (el.offsetParent === null || el.disabled || el.classList.contains("spoiler-static")) return;
+      n++;
+      const cs = getComputedStyle(el);
+      const edged = ["Top", "Right", "Bottom", "Left"].some(s =>
+        parseFloat(cs["border" + s + "Width"]) > 0 && (parseColor(cs["border" + s + "Color"]) || [0,0,0,0])[3] > 0);
+      const bg = parseColor(cs.backgroundColor);
+      const filled = bg && bg[3] > 0.03;
+      let ok = filled;
+      if (!ok && edged) {
+        const stack = []; let a = el;
+        while (a && a !== document.documentElement) {
+          const c = parseColor(getComputedStyle(a).backgroundColor);
+          if (c && c[3] > 0) { stack.push(c); if (c[3] >= 1) break; }
+          a = a.parentElement;
+        }
+        const field = compositeStack(stack);
+        ok = ["Top", "Right", "Bottom", "Left"].some(s => {
+          const bc = parseColor(cs["border" + s + "Color"]);
+          return bc && bc[3] > 0 && parseFloat(cs["border" + s + "Width"]) > 0 &&
+                 contrastRatio([bc[0], bc[1], bc[2]], field) >= 3;
+        });
+      }
+      if (!ok) bad.push(el.id || el.className.split(" ").filter(Boolean)[0] || el.tagName.toLowerCase());
+    });
+    add("L14", "Every tappable has a VISIBLE affordance (fill, or edge ≥3:1 composited — WCAG 1.4.11)",
+      bad.length === 0, bad.length ? [...new Set(bad)].slice(0, 8).join(" · ") : n + " tappables checked");
+  }
+
+  // L15 — reading-floor guard (D-35). On coarse pointers, reading paragraphs
+  // must render at or above this build's fluent floor. Fine pointers: n/a.
+  if (typeof window !== "undefined" && window.matchMedia) {
+    const READ_FLOOR = 15;
+    if (window.matchMedia("(pointer: coarse)").matches) {
+      const bad = [];
+      document.querySelectorAll(".rt, .lore-body").forEach(el => {
+        if (el.offsetParent === null || !el.textContent.trim()) return;
+        if (!(el.classList.contains("lore-body") || el.classList.contains("text-xs"))) return;
+        const fs = parseFloat(getComputedStyle(el).fontSize);
+        if (fs < READ_FLOOR) bad.push(el.className.split(" ")[0] + " " + fs + "px");
+      });
+      add("L15", "Reading paragraphs ≥ " + READ_FLOOR + "px on touch (fluent floor)",
+        bad.length === 0, bad.slice(0, 5).join(" · "));
+    } else {
+      add("L15", "Reading floor: fine pointer — not applicable", true, "skipped");
+    }
+  }
+
   // L4 — horizontal scroll on a phone means something is overflowing.
   const de = document.documentElement;
   add("L4", "No horizontal overflow",
@@ -6538,9 +6771,11 @@ function renderQA() {
   banner.classList.remove("hidden");
   if (vFail || gFail) {
     banner.className = "px-4 py-2 text-xs bg-pink/15 border-t border-pink text-pink";
+    window.__setHdrPinned(true);
     banner.textContent = `SCHEMA / HARNESS FAILURE — validateDB: ${vFail} failing · golden tests: ${gFail} failing. Open the QA Panel.`;
   } else {
     banner.className = "px-4 py-2 text-xs bg-cy/10 border-t border-cy/30 text-cy";
+    window.__setHdrPinned(false);
     banner.textContent = `SCHEMA OK — validateDB ${QA.validate.length}/${QA.validate.length} · golden tests ${QA.golden.length}/${QA.golden.length}`;
   }
 
@@ -6571,6 +6806,7 @@ function renderQA() {
   const lFail = lay.filter(r => !r.pass).length;
   if (lFail && !vFail && !gFail) {
     banner.className = "px-4 py-2 text-xs bg-pink/15 border-t border-pink text-pink";
+    window.__setHdrPinned(true);
     banner.textContent = `LAYOUT FAILURE — ${lFail} geometry check${lFail === 1 ? "" : "s"} failing. ` +
       `Logic is fine (validateDB ${QA.validate.length}/${QA.validate.length}, golden ${QA.golden.length}/${QA.golden.length}); ` +
       `the stylesheet is not. Open the QA Panel.`;
@@ -6648,6 +6884,33 @@ function wireSetup() {
 }
 
 function wireApp() {
+  // D-35c: build stamp is SINGLE-SOURCE. Two hand-edited stamps diverged once
+  // (setup badge stuck at 8.4 while the header said 8.5) — the deploy-staleness
+  // check exists to catch stale builds, so the stamp itself must be un-forkable.
+  const BUILD_STAMP = "BUILD 8.7 · 2026-08-19";
+  document.getElementById("build-stamp").textContent = BUILD_STAMP;
+  document.getElementById("build-stamp-setup").textContent = "v3.1 · " + BUILD_STAMP;
+
+  // D-36 — auto-hide command bar driver.
+  window.__setHdrPinned = on => {
+    const h = document.getElementById("app-header");
+    if (h) { h.classList.toggle("hdr-pinned", !!on); if (on) h.classList.remove("hdr-hidden"); }
+  };
+  (function autoHideHeader() {
+    const hdr = document.getElementById("app-header");
+    if (!hdr) return;
+    let lastY = scrollY, acc = 0, ticking = false;
+    const apply = () => {
+      ticking = false;
+      const y = scrollY, dy = y - lastY; lastY = y;
+      if (window.__suppressAutoHide) { acc = 0; return; }          // app-driven scroll, not the user
+      if (y <= hdr.offsetHeight + 8) { hdr.classList.remove("hdr-hidden"); acc = 0; return; }
+      acc = (dy > 0) === (acc > 0) ? acc + dy : dy;                // same-direction accumulator
+      if (acc > 24) hdr.classList.add("hdr-hidden");               // deliberate downward read
+      else if (acc < -12) hdr.classList.remove("hdr-hidden");      // any upward flick reveals
+    };
+    addEventListener("scroll", () => { if (!ticking) { ticking = true; requestAnimationFrame(apply); } }, { passive: true });
+  })();
   // Mobile HUD collapse. Desktop ignores this entirely (lg:block wins).
   const hudBody = document.getElementById("hud-body");
   // D-29: bound ONCE here. It was previously bound inside render(), so each
