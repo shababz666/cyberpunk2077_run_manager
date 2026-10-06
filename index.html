@@ -192,10 +192,23 @@ button{font-family:var(--ui);}
    downward scroll, return on any upward flick or at top. All pointer types
    (Shabab-approved for desktop too). A FAILING banner pins the whole header —
    a failure that scrolls out of sight defeats its purpose. */
-#app-header{transition:transform .18s ease-out;will-change:transform;}
+#app-header{transition:transform .3s ease;will-change:transform;}
 #app-header.hdr-hidden{transform:translateY(-100%);}
 #app-header.hdr-pinned{transform:none!important;}
 @media (prefers-reduced-motion: reduce){#app-header{transition:none;}}
+/* D-37 / BUILD 8.8 — slim nav. Header padding halves below the desktop
+   breakpoint; the five session-boundary I/O actions collapse behind one
+   "⋯ Data" disclosure (<1024px). Desktop: display:contents keeps them inline
+   in the same flex row, so nothing changes there. */
+#data-menu{display:contents;}
+#btn-data{display:none;}
+@media (max-width: 1023.98px){
+  #hdr-row{padding-top:.375rem;padding-bottom:.375rem;row-gap:.375rem;}
+  #btn-data{display:inline-block;}
+  #data-menu{display:none;}
+  #schema-chip{display:none;}   /* redundant with the build stamp ("v3.1 · BUILD …") */
+  #data-menu.open{display:flex;flex-wrap:wrap;gap:.5rem;width:100%;}
+}
 .cr-btn.cr-danger:hover{border-color:var(--pink);color:var(--pink);}
 @media (pointer:coarse){.cr-btn{min-height:32px;padding:6px 10px;}}
 
@@ -523,20 +536,24 @@ setTimeout(function(){
 <div id="app" class="hidden">
 
   <header id="app-header" class="border-b border-edge bg-panel/80 backdrop-blur sticky top-0 z-30">
-    <div class="max-w-[1600px] mx-auto px-3 sm:px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
-      <h1 class="text-cy text-sm md:text-base">CP2077 <span class="text-neon">TACTICAL RUN MANAGER</span></h1>
-      <span class="text-[10px] border border-edge px-2 py-1 text-slate-500">SCHEMA v3.1</span>
+    <div id="hdr-row" class="max-w-[1600px] mx-auto px-3 sm:px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+      <h1 id="app-title" class="text-cy text-sm md:text-base">CP2077 <span class="text-neon">TACTICAL RUN MANAGER</span></h1>
+      <span id="schema-chip" class="text-[10px] border border-edge px-2 py-1 text-slate-500">SCHEMA v3.1</span>
       <span id="build-stamp-setup" class="text-[10px] border border-edge px-2 py-1 text-slate-500"></span>
       <span id="store-mode" class="text-[10px] border border-edge px-2 py-1 text-slate-500"></span>
       <div class="ml-auto flex flex-wrap gap-2">
         <button id="btn-shield" class="text-xs border border-edge px-3 py-1.5 hover:border-neon" aria-pressed="false">Spoiler shield: OFF</button>
         <button id="btn-help"   class="text-xs border border-neon/60 text-neon px-3 py-1.5 hover:border-neon">Help</button>
-        <button id="btn-qa"     class="text-xs border border-edge px-3 py-1.5 hover:border-cy">QA Panel</button>
+        <button id="btn-telemetry" class="text-xs border border-edge px-3 py-1.5 hover:border-cy">Telemetry</button>
+        <button id="btn-data" class="text-xs border border-edge px-3 py-1.5 hover:border-cy" aria-expanded="false" aria-controls="data-menu">&#8943; Data</button>
+        <div id="data-menu">
         <button id="btn-copy"   class="text-xs border border-cy/50 text-cy px-3 py-1.5 hover:border-cy">Copy JSON</button>
         <button id="btn-paste"  class="text-xs border border-cy/50 text-cy px-3 py-1.5 hover:border-cy">Paste JSON</button>
         <button id="btn-export" class="text-xs border border-edge px-3 py-1.5 hover:border-cy">Export file</button>
         <button id="btn-import" class="text-xs border border-edge px-3 py-1.5 hover:border-cy">Import file</button>
         <button id="btn-reset"  class="text-xs border border-pink/50 text-pink px-3 py-1.5 hover:border-pink">Reset run</button>
+        </div>
+        <button id="btn-qa" class="hidden text-xs border border-edge px-3 py-1.5 hover:border-cy">QA Panel</button>
       </div>
     </div>
     <div id="qa-banner" class="hidden px-4 py-2 text-xs"></div>
@@ -5808,6 +5825,17 @@ function activeCardEl() {
   return document.querySelector('#flow [data-active="1"]');
 }
 
+function scrollToEl(el) {
+  if (!el) return;
+  const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    const top = el.getBoundingClientRect().top + window.pageYOffset - headerOffset();
+    window.__suppressAutoHide = true;
+    clearTimeout(window.__suppressT);
+    window.__suppressT = setTimeout(() => { window.__suppressAutoHide = false; }, reduce ? 80 : 650);
+    window.scrollTo({ top: Math.max(0, top), behavior: reduce ? "auto" : "smooth" });
+  }));
+}
 function scrollToActive() {
   const el = activeCardEl();
   if (!el) return;
@@ -6772,10 +6800,12 @@ function renderQA() {
   if (vFail || gFail) {
     banner.className = "px-4 py-2 text-xs bg-pink/15 border-t border-pink text-pink";
     window.__setHdrPinned(true);
+    if (window.__syncQaButton) window.__syncQaButton(true);
     banner.textContent = `SCHEMA / HARNESS FAILURE — validateDB: ${vFail} failing · golden tests: ${gFail} failing. Open the QA Panel.`;
   } else {
     banner.className = "px-4 py-2 text-xs bg-cy/10 border-t border-cy/30 text-cy";
     window.__setHdrPinned(false);
+    if (window.__syncQaButton) window.__syncQaButton(false);
     banner.textContent = `SCHEMA OK — validateDB ${QA.validate.length}/${QA.validate.length} · golden tests ${QA.golden.length}/${QA.golden.length}`;
   }
 
@@ -6807,6 +6837,7 @@ function renderQA() {
   if (lFail && !vFail && !gFail) {
     banner.className = "px-4 py-2 text-xs bg-pink/15 border-t border-pink text-pink";
     window.__setHdrPinned(true);
+    if (window.__syncQaButton) window.__syncQaButton(true);
     banner.textContent = `LAYOUT FAILURE — ${lFail} geometry check${lFail === 1 ? "" : "s"} failing. ` +
       `Logic is fine (validateDB ${QA.validate.length}/${QA.validate.length}, golden ${QA.golden.length}/${QA.golden.length}); ` +
       `the stylesheet is not. Open the QA Panel.`;
@@ -6887,7 +6918,7 @@ function wireApp() {
   // D-35c: build stamp is SINGLE-SOURCE. Two hand-edited stamps diverged once
   // (setup badge stuck at 8.4 while the header said 8.5) — the deploy-staleness
   // check exists to catch stale builds, so the stamp itself must be un-forkable.
-  const BUILD_STAMP = "BUILD 8.7 · 2026-08-19";
+  const BUILD_STAMP = "BUILD 8.8 · 2026-09-29";
   document.getElementById("build-stamp").textContent = BUILD_STAMP;
   document.getElementById("build-stamp-setup").textContent = "v3.1 · " + BUILD_STAMP;
 
@@ -7029,6 +7060,40 @@ function wireApp() {
   });
   document.getElementById("ponr-cancel").addEventListener("click", closePonrModal);
 
+  // BUILD 8.8 — QA panel is off the everyday nav. It is reachable by (a) the
+  // ?qa=1 URL parameter (accessible, keyboard-free, deploy-verification),
+  // (b) five taps on the title inside 2000ms (no affordance by design — a
+  // secret gesture must never look like a button), and (c) automatically
+  // whenever a failure banner is showing: failure is when the panel matters.
+  const qaBtn = document.getElementById("btn-qa");
+  window.__qaRevealed = new URLSearchParams(location.search).get("qa") === "1";
+  window.__syncQaButton = failing => qaBtn.classList.toggle("hidden", !(failing || window.__qaRevealed));
+  window.__syncQaButton(false);
+  if (window.__qaRevealed) document.getElementById("qa-panel").classList.remove("hidden");
+  (function titleGesture() {
+    let taps = [];
+    document.getElementById("app-title").addEventListener("click", () => {
+      const now = Date.now();
+      taps = taps.filter(t => now - t < 2000); taps.push(now);
+      if (taps.length >= 5) {
+        taps = [];
+        window.__qaRevealed = true; window.__syncQaButton(false);
+        document.getElementById("qa-panel").classList.toggle("hidden");
+      }
+    });
+  })();
+  document.getElementById("btn-data").addEventListener("click", () => {
+    const m = document.getElementById("data-menu"), b = document.getElementById("btn-data");
+    const open = m.classList.toggle("open");
+    b.setAttribute("aria-expanded", String(open));
+  });
+  document.getElementById("btn-telemetry").addEventListener("click", () => {
+    // Expand first (the body is collapsed below 1024px), THEN scroll via the
+    // app's own helper so the sticky-header offset and auto-hide suppression apply.
+    const body = document.getElementById("hud-body"), tog = document.getElementById("hud-toggle");
+    if (body.classList.contains("hidden") && tog && getComputedStyle(tog).display !== "none") tog.click();
+    scrollToEl(body.parentElement);
+  });
   document.getElementById("btn-qa").addEventListener("click", () => {
     document.getElementById("qa-panel").classList.remove("hidden");
   });
