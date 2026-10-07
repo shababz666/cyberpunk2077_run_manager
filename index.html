@@ -196,7 +196,7 @@ button{font-family:var(--ui);}
 #app-header.hdr-hidden{transform:translateY(-100%);}
 #app-header.hdr-pinned{transform:none!important;}
 @media (prefers-reduced-motion: reduce){#app-header{transition:none;}}
-/* D-37 / BUILD 8.8 — slim nav. Header padding halves below the desktop
+/* D-37 (shipped in 8.8) — slim nav. Header padding halves below the desktop
    breakpoint; the five session-boundary I/O actions collapse behind one
    "⋯ Data" disclosure (<1024px). Desktop: display:contents keeps them inline
    in the same flex row, so nothing changes there. */
@@ -877,7 +877,7 @@ setTimeout(function(){
    ═══════════════════════════════════════════════════════════════════════ */
 const SPEC = Object.freeze({
   schemaVersion: "3.1",
-  storageKey: "cp2077_trm_v3",          // legacy single-run key (read-only after migration; never deleted by code)
+  storageKey: "cp2077_trm_v3",          // legacy single-run key (read-only after migration). Deleted only by an explicit user discard when THIS key fails to load and no career exists (D-40)
   careerKey:  "cp2077_trm_v4_career",   // Phase 8 — the run list container
   careerSchema: 1,
   runCap: 50, runWarn: 40,
@@ -3880,10 +3880,14 @@ async function loadRun() {
   const raw = await Store.get(SPEC.storageKey);
   if (!raw) return { status: "empty" };
   let parsed;
-  try { parsed = JSON.parse(raw); } catch (e) { return { status: "corrupt", raw }; }
+  // D-40: every failure result names the key it was read from, so the
+  // discard path deletes the store that actually failed — never a sibling.
+  try { parsed = JSON.parse(raw); } catch (e) { return { status: "corrupt", raw, key: SPEC.storageKey }; }
   const rec = reconcile(parsed);
   if (!rec.ok)
-    return { status: "incompatible", raw, found: parsed.schemaVersion || "unknown", reason: rec.reason };
+    // D-41: raw "null" parses to null; reconcile() rejects it, so this branch
+    // must not dereference it (it threw here and killed boot on every load).
+    return { status: "incompatible", raw, key: SPEC.storageKey, found: (parsed && parsed.schemaVersion) || "unknown", reason: rec.reason };
   return { status: "ok", data: rec.data, report: rec };
 }
 
@@ -3894,9 +3898,9 @@ async function loadCareer() {
   const raw = await Store.get(SPEC.careerKey);
   if (raw) {
     let parsed;
-    try { parsed = JSON.parse(raw); } catch (e) { return { status: "corrupt", raw }; }
+    try { parsed = JSON.parse(raw); } catch (e) { return { status: "corrupt", raw, key: SPEC.careerKey }; }
     const shape = validateCareerShape(parsed);
-    if (!shape.ok) return { status: "incompatible", raw, reason: shape.reason, found: "career " + (parsed && parsed.careerSchema) };
+    if (!shape.ok) return { status: "incompatible", raw, key: SPEC.careerKey, reason: shape.reason, found: "career " + (parsed && parsed.careerSchema) };
     // Reconcile each run individually; unreconcilable runs are kept aside, never dropped silently.
     const good = [], rejected = [];
     parsed.runs.forEach(r => {
@@ -3918,6 +3922,22 @@ async function loadCareer() {
   careerAddRun({ ...legacy.data, label: legacy.data.label || null, notes: legacy.data.notes || "", archived: false }, true);
   await careerSave();                                          // v3 key untouched
   return { status: "migrated", rejected: [] };
+}
+
+/* D-40 — the migrate modal's "discard" deleted SPEC.storageKey unconditionally.
+   When the CAREER container was the store that failed, that erased the legacy
+   v3 backup (promised "never deleted by the app") and left the corrupt
+   container in place. Discard now targets exactly the key that failed.
+   Fail-safe: a result that does not name one of the two known keys deletes
+   nothing — an unknown target is never a reason to guess. */
+function failedStoreKey(loaded) {
+  if (!loaded || (loaded.status !== "corrupt" && loaded.status !== "incompatible")) return null;
+  return loaded.key === SPEC.careerKey || loaded.key === SPEC.storageKey ? loaded.key : null;
+}
+async function discardFailedSave(loaded) {
+  const k = failedStoreKey(loaded);
+  if (!k) return { ok: false, key: null };
+  return { ok: await Store.del(k), key: k };
 }
 
 function download(filename, text) {
@@ -5789,6 +5809,34 @@ GOLDEN.push({
   }
 });
 
+GOLDEN.push({
+  id: "G40_discard_targets_failed_key",
+  desc: "D-40: the migrate-modal discard deletes exactly the store that failed — career failure never targets the legacy v3 backup; unknown or non-failure results target nothing",
+  run() {
+    assert(SPEC.careerKey !== SPEC.storageKey, "keys must be distinct for the mapping to mean anything");
+    ["corrupt", "incompatible"].forEach(st => {
+      assert(failedStoreKey({ status: st, key: SPEC.careerKey }) === SPEC.careerKey, st + " career must target the career key");
+      assert(failedStoreKey({ status: st, key: SPEC.storageKey }) === SPEC.storageKey, st + " legacy must target the legacy key");
+      assert(failedStoreKey({ status: st }) === null, st + " with no key must target nothing (fail-safe)");
+      assert(failedStoreKey({ status: st, key: "cp2077_other" }) === null, st + " with a foreign key must target nothing");
+    });
+    ["ok", "migrated", "empty"].forEach(st =>
+      assert(failedStoreKey({ status: st, key: SPEC.careerKey }) === null, "non-failure status " + st + " must target nothing"));
+    assert(failedStoreKey(null) === null && failedStoreKey(undefined) === null, "absent result must target nothing");
+    // Source guard: the document holds exactly one Store-delete call, and it is
+    // the guarded one. An unguarded delete of a hard-coded key reappearing
+    // anywhere is the D-40 regression.
+    const src = (typeof __RAW_SOURCE__ === "string" && __RAW_SOURCE__)
+             || (document.documentElement && document.documentElement.outerHTML) || "";
+    if (src) {
+      const dels = src.match(/Store\.del\(\s*[\w.]+\s*\)/g) || [];
+      const guarded = "Store." + "del(k)";   // split so this literal does not match itself
+      assert(dels.length === 1 && dels[0].replace(/\s/g, "") === guarded,
+             "expected exactly one Store.del (the guarded one), found: " + JSON.stringify(dels));
+    }
+  }
+});
+
 function assert(cond, msg) { if (!cond) throw new Error(msg); }
 
 function runGoldenTests() {
@@ -6527,8 +6575,10 @@ function render(opts) {
   const feas = reachableFrom(stateData);
   const wallBody = document.getElementById("wall-body");
   if (wallBody) {
-    renderWallInto(wallBody, wallRuns(feas));
+    // One run list per render: the wall and its click handlers must see the
+    // same snapshot (previously built twice from the same inputs).
     const wr = wallRuns(feas);
+    renderWallInto(wallBody, wr);
     wallBody.querySelectorAll("[data-slot]").forEach(b => b.addEventListener("click", () => {
       const id = b.getAttribute("data-slot");
       if (isNarrowViewport()) {
@@ -6918,7 +6968,7 @@ function wireApp() {
   // D-35c: build stamp is SINGLE-SOURCE. Two hand-edited stamps diverged once
   // (setup badge stuck at 8.4 while the header said 8.5) — the deploy-staleness
   // check exists to catch stale builds, so the stamp itself must be un-forkable.
-  const BUILD_STAMP = "BUILD 8.8 · 2026-09-29";
+  const BUILD_STAMP = "BUILD 8.9 · 2026-10-06";
   document.getElementById("build-stamp").textContent = BUILD_STAMP;
   document.getElementById("build-stamp-setup").textContent = "v3.1 · " + BUILD_STAMP;
 
@@ -7060,7 +7110,7 @@ function wireApp() {
   });
   document.getElementById("ponr-cancel").addEventListener("click", closePonrModal);
 
-  // BUILD 8.8 — QA panel is off the everyday nav. It is reachable by (a) the
+  // D-37 (shipped in 8.8) — QA panel is off the everyday nav. It is reachable by (a) the
   // ?qa=1 URL parameter (accessible, keyboard-free, deploy-verification),
   // (b) five taps on the title inside 2000ms (no affordance by design — a
   // secret gesture must never look like a button), and (c) automatically
@@ -7199,15 +7249,22 @@ async function boot() {
   } else if (loaded.status === "incompatible" || loaded.status === "corrupt") {
     document.getElementById("app").classList.remove("hidden");
     const mm = document.getElementById("migrate-modal");
+    // D-40: name the store that failed — a career container holds every run, so
+    // the user must know the scope of what "discard" removes.
+    const isCareer = loaded.key === SPEC.careerKey;
     document.getElementById("migrate-msg").textContent =
       loaded.status === "corrupt"
-        ? "The stored run could not be parsed. Export the raw data before starting fresh."
-        : `Stored run (schema ${loaded.found}) cannot seed a replay: ${loaded.reason} Export it before starting fresh — nothing has been deleted yet.`;
+        ? `The stored ${isCareer ? "career (all runs)" : "run"} could not be parsed. Export the raw data before starting fresh.`
+        : isCareer
+          ? `Stored career cannot be loaded: ${loaded.reason} Export it before starting fresh — nothing has been deleted yet.`
+          : `Stored run (schema ${loaded.found}) cannot seed a replay: ${loaded.reason} Export it before starting fresh — nothing has been deleted yet.`;
     mm.classList.remove("hidden"); mm.classList.add("flex"); guardOverlayClip(mm.id);
     document.getElementById("migrate-export").addEventListener("click", () =>
-      download("cp2077_run_raw_backup.json", loaded.raw));
+      download(isCareer ? "cp2077_career_raw_backup.json" : "cp2077_run_raw_backup.json", loaded.raw));
     document.getElementById("migrate-discard").addEventListener("click", async () => {
-      await Store.del(SPEC.storageKey);
+      // Deletes ONLY the failed key; an unknown target deletes nothing but still
+      // proceeds to setup (no soft-lock on the modal).
+      await discardFailedSave(loaded);
       mm.classList.add("hidden"); mm.classList.remove("flex");
       document.getElementById("app").classList.add("hidden");
       showSetup();
