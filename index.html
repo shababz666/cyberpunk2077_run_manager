@@ -3222,7 +3222,10 @@ function arsenalStatus(state, item) {
   if (choice && choice.mutex && state.mutexTaken[choice.mutex] &&
       state.mutexTaken[choice.mutex] !== choice.id) return "CHOICE_LOCKED";
 
-  if (!nodeResolved(state, item.node)) return "PENDING";
+  // D-44: standing at the item's node is not walking past it. Multi-item nodes
+  // self-loop (V14), so after taking one item the run is still in the room and
+  // the others are still on the card. Only leaving the node can miss them.
+  if (!nodeResolved(state, item.node) || activeNode(state.pathHistory) === item.node) return "PENDING";
   // The asymmetry rule: a false RECOVERABLE costs the player the item; a false
   // MISSED costs a wasted trip to Dogtown. Herold's stock therefore splits on
   // verification — unconfirmed restocks are surfaced as a question, never as a
@@ -3564,24 +3567,79 @@ function reachableFrom(state, opts) {
     items[i.id] = { status: FEAS.UNDETERMINED, reason: "Search budget reached before this branch was settled." };
   });
 
-  const ALL_OUTCOMES = ["devil","devil_engram","plr","star","sun","reaper","temperance","tower"];
   const endings = {};
-  ALL_OUTCOMES.forEach(k => {
+  ENDING_OUTCOMES.forEach(k => {
     if (endingWitness[k]) { endings[k] = { status: FEAS.REACHABLE, witness: endingWitness[k] }; return; }
-    // Necessary conditions from the derived ending table: a closed ending
-    // whose gate arc is botched (or Tower without DLC) is proven closed.
-    const towerLocked = state.towerTerminal && k !== "tower";
-    const noDlcTower  = k === "tower" && !state.identity.dlc;
-    const starDead    = k === "star" && state.botchedArcs.includes(SPEC.endingArcs.star);
-    const sunDead     = k === "sun"  && state.botchedArcs.includes(SPEC.endingArcs.sun);
-    const reaperDead  = k === "reaper" && (state.mutexTaken.mtx_reaper_dialogue && state.mutexTaken.mtx_reaper_dialogue !== "c_co_exact_chain" || state.botchedArcs.includes("arc_chippin"));
-    const outcomeSet  = !!state.world.outcome && state.world.outcome !== k;
-    if (towerLocked || noDlcTower || starDead || sunDead || reaperDead || outcomeSet)
-      { endings[k] = { status: FEAS.UNREACHABLE }; return; }
+    if (proveEndingUnreachable(state, k)) { endings[k] = { status: FEAS.UNREACHABLE }; return; }
     endings[k] = { status: complete ? FEAS.UNREACHABLE : FEAS.UNDETERMINED };
   });
 
   return { items, endings, meta: { expanded, budget, complete, ms: Date.now() - t0, startNode } };
+}
+
+/* Necessary conditions from the derived ending table: a closed ending whose
+   gate arc is botched (or Tower without DLC) is proven closed. Extracted
+   verbatim from reachableFrom (9.1a) so the solver and the Save Point Advisor
+   share ONE copy of the ending proofs. */
+const ENDING_OUTCOMES = ["devil","devil_engram","plr","star","sun","reaper","temperance","tower"];
+function proveEndingUnreachable(state, k) {
+  const towerLocked = state.towerTerminal && k !== "tower";
+  const noDlcTower  = k === "tower" && !state.identity.dlc;
+  const starDead    = k === "star" && state.botchedArcs.includes(SPEC.endingArcs.star);
+  const sunDead     = k === "sun"  && state.botchedArcs.includes(SPEC.endingArcs.sun);
+  const reaperDead  = k === "reaper" && (state.mutexTaken.mtx_reaper_dialogue && state.mutexTaken.mtx_reaper_dialogue !== "c_co_exact_chain" || state.botchedArcs.includes("arc_chippin"));
+  const outcomeSet  = !!state.world.outcome && state.world.outcome !== k;
+  return !!(towerLocked || noDlcTower || starDead || sunDead || reaperDead || outcomeSet);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   PHASE 9 · P1 · 9.1a — SAVE POINT ADVISOR: DETECTOR (engine only, no UI).
+   Spec: docs/phase9/P1_SAVE_POINT_ADVISOR_SPEC.md §4 (ratified R-012).
+
+   A fork is CONSEQUENTIAL when some legal choice permanently closes
+   something that is still open: an item, an ending, or an arc (botched).
+   Per choice: step with the engine's own stepState(), then apply the
+   engine's own necessary-condition proofs (proveItemUnreachable,
+   proveEndingUnreachable) to the stepped state. Deviation from the spec's
+   "boot-time static consequence index", recorded in the defect log: these
+   proofs already encode mutex, cone exit, requires conflicts and the derived
+   Stout key; a separate index would be a hand copy that drifts (the spec
+   forbids hand copies of derived keys). Pure function of replayed state
+   (I1/I2); stores nothing (I6). CI holds it honest against the solver.
+   ═══════════════════════════════════════════════════════════════════════ */
+function adviseFork(state) {
+  const t0 = performance.now();
+  const node = activeNode(state.pathHistory);
+  const n = node && questDB[node];
+  if (!n) return null;
+  const legal = n.choices.filter(c => choiceStatus(state, c).ok);
+  const cone0 = graphCone(node);
+  // Open = pending and not already proven lost. Herold-verified items are not
+  // "lost" when walked past (RECOVERABLE); unverified recovery counts as lost
+  // until seen on the shelf (the asymmetry rule).
+  const openItems = arsenalRegistry.filter(i => arsenalStatus(state, i) === "PENDING" && !proveItemUnreachable(state, i, cone0));
+  const openEnds = ENDING_OUTCOMES.filter(k => !proveEndingUnreachable(state, k));
+  const choices = legal.map(c => {
+    const s2 = stepState(state, node, c);
+    const cone2 = c.next ? graphCone(c.next) : new Set();
+    const items = [];
+    openItems.forEach(i => {
+      const st = arsenalStatus(s2, i);
+      if (st === "ACQUIRED" || st === "RECOVERABLE") return;
+      if (st === "RECOVERY_UNVERIFIED") { items.push({ id: i.id, kind: "unverifiedRecovery" }); return; }
+      if (proveItemUnreachable(s2, i, cone2)) items.push({ id: i.id, kind: "lost" });
+    });
+    const endings = openEnds.filter(k => proveEndingUnreachable(s2, k));
+    const botched = s2.botchedArcs.filter(a => !state.botchedArcs.includes(a));
+    return { id: c.id, items, endings, botched };
+  });
+  const reasons = [];
+  if (choices.some(x => x.items.length || x.endings.length || x.botched.length)) reasons.push("loss");
+  // Always a fork (spec §4.3), regardless of what the proofs find.
+  if (n.type === "PONR" || legal.some(c => c.ponr)) reasons.push("ponr");
+  if (legal.some(c => c.mutex === "mtx_ending_terminal")) reasons.push("terminal");
+  if (n.timer) reasons.push("timer");
+  return { node, consequential: reasons.length > 0, reasons, choices, ms: performance.now() - t0 };
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
@@ -4944,6 +5002,55 @@ GOLDEN.push({
       "PL must be gated on the DLC flag, got: " + plGate.reason);
     assert(deriveEndings({ tower: true }, { dlc: false }).tower === false,
       "the tower flag must not fire without the DLC");
+  }
+});
+
+/* G41 — D-44 guard. After taking one item at a multi-item self-looping node
+   (V14), the run is still in the room: every other item whose choice is still
+   legal there must read PENDING, not missed. Data-driven: every such node
+   (2+ registry items, acquisition choices self-loop, not mutually exclusive)
+   must have a legal test path below, so new data cannot slip past the guard. */
+const D44_MASC_SK = { bodyType: "masc", voice: "masc", lifepath: "streetkid", dlc: true };   // PATH_PREREQS is legal only for this identity
+const D44_PATHS = {   // [identity, legal path ending AT the node]
+  arc2_automatic_love:  [FEM_V,  PATH_ACT1_DONE.concat([P("act2_hub", "c_hub_evelyn")])],
+  arc3_chippin_ebunike: [D44_MASC_SK, PATH_PREREQS.concat([P("act2_hub", "c_hub_johnny"), P("arc3_tapeworm", "c_tw_give_control")])],
+  arc3_pl_hansen:       [FEM_V,  PATH_ACT1_DONE.concat([P("act2_hub", "c_hub_pl"), P("arc3_pl_dog_eat_dog", "c_pl_ded_enter"),
+                          P("arc3_pl_hole_in_sky", "c_pl_his_continue"), P("arc3_pl_lucretia", "c_pl_lmr_continue"),
+                          P("arc3_pl_firestarter", "c_plf_side_reed")])]
+};
+GOLDEN.push({
+  id: "G41_loop_node_items_stay_pending",
+  desc: "D-44: at a multi-item self-looping node, taking one item leaves the others PENDING while still in the room",
+  run() {
+    const byNode = {};
+    arsenalRegistry.forEach(i => (byNode[i.node] = byNode[i.node] || []).push(i));
+    const loopNodes = Object.keys(byNode).filter(nid => {
+      const its = byNode[nid]; if (its.length < 2) return false;
+      const cs = its.map(i => lookupChoice(nid, i.choice_id));
+      const mx = cs.map(c => c && c.mutex).filter(Boolean);
+      return cs.every(c => c && c.next === nid) && new Set(mx).size === mx.length;   // self-loop, not mutually exclusive
+    });
+    assert(loopNodes.length >= 3, "expected the known multi-item loop nodes, found " + loopNodes.join(", "));
+    loopNodes.forEach(nid => {
+      assert(D44_PATHS[nid], "no G41 test path for multi-item loop node " + nid + " — add one to D44_PATHS");
+      const [who, prefix] = D44_PATHS[nid];
+      assert(activeNode(prefix) === nid, "G41 path must end at " + nid + ", ends at " + activeNode(prefix));
+      let cur = replay(who, []);
+      prefix.forEach(st => { assert(choiceStatus(cur, lookupChoice(st.node, st.choiceId)).ok, "G41 path step blocked: " + st.choiceId);
+        cur = replay(who, cur.pathHistory.concat([st])); });
+      let checked = 0;
+      byNode[nid].forEach(a => {
+        const ph = prefix.concat([P(nid, a.choice_id)]);
+        const s = replay(who, ph);
+        assert(activeNode(ph) === nid, "taking " + a.id + " must loop back to " + nid);
+        byNode[nid].filter(b => b !== a).forEach(b => {
+          if (!choiceStatus(s, lookupChoice(nid, b.choice_id)).ok) return;   // not takeable here: D-44 does not apply
+          const st = arsenalStatus(s, b); checked++;
+          assert(st === "PENDING", "after taking " + a.id + " at " + nid + ", " + b.id + " is still on the card but reads " + st);
+        });
+      });
+      assert(checked > 0, "G41 checked no item pairs at " + nid);
+    });
   }
 });
 
@@ -7000,7 +7107,7 @@ function wireApp() {
   // D-35c: build stamp is SINGLE-SOURCE. Two hand-edited stamps diverged once
   // (setup badge stuck at 8.4 while the header said 8.5) — the deploy-staleness
   // check exists to catch stale builds, so the stamp itself must be un-forkable.
-  const BUILD_STAMP = "BUILD 8.9.1 · 2026-10-07";
+  const BUILD_STAMP = "BUILD 8.9.2 · 2026-10-08";
   document.getElementById("build-stamp").textContent = BUILD_STAMP;
   document.getElementById("build-stamp-setup").textContent = "v3.1 · " + BUILD_STAMP;
 
