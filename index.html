@@ -4128,14 +4128,14 @@ function validateDB() {
         .map(el => el.id || el.className);
     })());
 
-  // V23 — D-35c. All "BUILD 8.x" literals in the document (source const +
+  // V23 — D-35c. All "BUILD x.y[.z]" literals in the document (source const +
   // rendered spans) must be identical; a diverged stamp is a shipped lie.
   add("V23", "Build stamp is single-source — all BUILD literals identical",
     (() => {
       const s = (typeof __RAW_SOURCE__ === "string" && __RAW_SOURCE__)
              || (document.documentElement && document.documentElement.outerHTML) || "";
       if (!s) return ["no source available to scan"];
-      const m = s.match(/BUILD 8\.\d+/g) || [];
+      const m = s.match(/BUILD \d+\.\d+(?:\.\d+)*/g) || [];   // 8.9.1: patch digit included (D-43)
       const u = [...new Set(m)];
       return u.length <= 1 ? [] : u;
     })());
@@ -5873,14 +5873,47 @@ function activeCardEl() {
   return document.querySelector('#flow [data-active="1"]');
 }
 
+/* D-43 — app-driven scroll guard for the D-36 auto-hide header. Two faults
+   left the header hidden after Telemetry (device-verified, iOS 27):
+   (1) the guard went up two frames AFTER the action, so the scroll-anchoring
+   jump from expanding the HUD read as a 1,760 px user scroll down; (2) a fixed
+   650 ms window ended without re-checking the header, so a header hidden
+   mid-move stayed hidden at the top, and a long smooth scroll outlasted it.
+   Now: hold BEFORE the action; release only once the move has ARRIVED at its
+   target and scrolling has been quiet (min 250 ms held, 150 ms quiet, 3 s cap).
+   Quiet alone was not enough: a 205 ms frame stall in WebKit released the hold
+   mid-move. On release the driver resyncs its baseline and re-applies the
+   at-top rule. */
+function holdAutoHide() {
+  const t0 = performance.now();
+  window.__suppressAutoHide = true;
+  window.__holdTarget = null;   // set by the scroll helper once the destination is measured
+  clearTimeout(window.__suppressT); clearTimeout(window.__suppressCap);
+  const release = () => {
+    clearTimeout(window.__suppressT); clearTimeout(window.__suppressCap);
+    window.__suppressAutoHide = false;
+    window.__holdQuiet = null;
+    if (window.__autoHideResync) window.__autoHideResync();
+  };
+  const quiet = () => {
+    clearTimeout(window.__suppressT);
+    window.__suppressT = setTimeout(() => {
+      const t = window.__holdTarget, away = t != null && Math.abs(window.pageYOffset - t) > 2;
+      if (performance.now() - t0 < 250 || away) quiet(); else release();   // the 3 s cap ends a move that never arrives
+    }, 150);
+  };
+  window.__holdQuiet = quiet;   // the auto-hide driver's scroll listener re-arms it while the app's scroll moves
+  window.__suppressCap = setTimeout(release, 3000);
+  quiet();
+}
+
 function scrollToEl(el) {
   if (!el) return;
   const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  holdAutoHide();
   requestAnimationFrame(() => requestAnimationFrame(() => {
     const top = el.getBoundingClientRect().top + window.pageYOffset - headerOffset();
-    window.__suppressAutoHide = true;
-    clearTimeout(window.__suppressT);
-    window.__suppressT = setTimeout(() => { window.__suppressAutoHide = false; }, reduce ? 80 : 650);
+    window.__holdTarget = Math.min(Math.max(0, top), document.documentElement.scrollHeight - window.innerHeight);
     window.scrollTo({ top: Math.max(0, top), behavior: reduce ? "auto" : "smooth" });
   }));
 }
@@ -5888,13 +5921,12 @@ function scrollToActive() {
   const el = activeCardEl();
   if (!el) return;
   const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  holdAutoHide();
   // Two frames: the flow was just rebuilt, and measuring before paint gives
   // stale offsets on mobile Safari.
   requestAnimationFrame(() => requestAnimationFrame(() => {
     const top = el.getBoundingClientRect().top + window.pageYOffset - headerOffset();
-    window.__suppressAutoHide = true;
-    clearTimeout(window.__suppressT);
-    window.__suppressT = setTimeout(() => { window.__suppressAutoHide = false; }, reduce ? 80 : 650);
+    window.__holdTarget = Math.min(Math.max(0, top), document.documentElement.scrollHeight - window.innerHeight);
     window.scrollTo({ top: Math.max(0, top), behavior: reduce ? "auto" : "smooth" });
     setTimeout(updateJumpPill, reduce ? 0 : 420);
   }));
@@ -6968,7 +7000,7 @@ function wireApp() {
   // D-35c: build stamp is SINGLE-SOURCE. Two hand-edited stamps diverged once
   // (setup badge stuck at 8.4 while the header said 8.5) — the deploy-staleness
   // check exists to catch stale builds, so the stamp itself must be un-forkable.
-  const BUILD_STAMP = "BUILD 8.9 · 2026-10-06";
+  const BUILD_STAMP = "BUILD 8.9.1 · 2026-10-07";
   document.getElementById("build-stamp").textContent = BUILD_STAMP;
   document.getElementById("build-stamp-setup").textContent = "v3.1 · " + BUILD_STAMP;
 
@@ -6990,7 +7022,16 @@ function wireApp() {
       if (acc > 24) hdr.classList.add("hdr-hidden");               // deliberate downward read
       else if (acc < -12) hdr.classList.remove("hdr-hidden");      // any upward flick reveals
     };
-    addEventListener("scroll", () => { if (!ticking) { ticking = true; requestAnimationFrame(apply); } }, { passive: true });
+    addEventListener("scroll", () => {
+      if (window.__holdQuiet) window.__holdQuiet();                 // D-43: an app-driven move is still moving
+      if (!ticking) { ticking = true; requestAnimationFrame(apply); }
+    }, { passive: true });
+    // D-43: called when an app-driven move ends. Rebase so the move is never read as a user scroll,
+    // and re-apply the at-top rule — no scroll event may follow to do it.
+    window.__autoHideResync = () => {
+      lastY = scrollY; acc = 0;
+      if (scrollY <= hdr.offsetHeight + 8) hdr.classList.remove("hdr-hidden");
+    };
   })();
   // Mobile HUD collapse. Desktop ignores this entirely (lg:block wins).
   const hudBody = document.getElementById("hud-body");
@@ -7141,6 +7182,7 @@ function wireApp() {
     // Expand first (the body is collapsed below 1024px), THEN scroll via the
     // app's own helper so the sticky-header offset and auto-hide suppression apply.
     const body = document.getElementById("hud-body"), tog = document.getElementById("hud-toggle");
+    holdAutoHide();   // D-43: BEFORE expanding — the expansion's scroll-anchoring jump is not the user
     if (body.classList.contains("hidden") && tog && getComputedStyle(tog).display !== "none") tog.click();
     scrollToEl(body.parentElement);
   });
