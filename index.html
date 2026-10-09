@@ -1043,6 +1043,10 @@ const DB_ACT1 = {
     desc: "Royce deposed Brick and left him wired to a bomb. Freeing him only pays off later if Royce does not survive the day.",
     timer: null, bug: null,
     src: "Brick cannot retake Maelstrom from a living Royce, so a peaceful resolution neutralises this choice.",
+    saveBefore: { // R-013: this card appears inside a no-save stretch, so "save now" may be too late
+      text: "You may not be able to save inside All Foods. Your safe save is the one from before the intercom at the All Foods gate.",
+      basis: ["B_act1.md#act1_pickup_brick", "B_act1.md#act1_pickup_royce"]
+    },
     choices: [
       { id: "c_pickup_brick_free", label: "Remote-deactivate the lock. Cut Brick loose.",
         attr: "Remote Deactivation",
@@ -1063,6 +1067,10 @@ const DB_ACT1 = {
     desc: "Four resolutions, and taking one closes the other three. Every peaceful outcome leaves Royce breathing, which closes Chaos for good and opens Doom Doom in its place.",
     timer: null, bug: null,
     src: "Peaceful resolutions promote Gilchrist over Stout and void the Meredith romance. Only the malware-intact shard keeps Stout in post.",
+    saveBefore: { // R-013: this card appears inside a no-save stretch, so "save now" may be too late
+      text: "You may not be able to save inside All Foods. Your safe save is the one from before the intercom at the All Foods gate.",
+      basis: ["B_act1.md#act1_pickup_royce"]
+    },
     choices: [
       { id: "c_pickup_royce_clean", label: "Pay with the wiped shard.",
         desc: "Royce scans it, finds it clean, and lets you walk — then Militech storms the plant.",
@@ -1105,6 +1113,10 @@ const DB_ACT1 = {
     desc: "Only reachable on the two resolutions where Royce dies. Walk past the body and Chaos is still recoverable from Herold Lowe later; go peaceful and it is gone for good.",
     timer: null, bug: null,
     src: "Herold Lowe stocks Chaos only if Royce died and the pickup was missed — never if Royce survived.",
+    saveBefore: { // R-013: this card appears inside a no-save stretch, so "save now" may be too late
+      text: "You may not be able to save inside All Foods. Your safe save is the one from before the intercom at the All Foods gate.",
+      basis: ["B_act1.md#act1_pickup_chaos", "B_act1.md#act1_pickup_royce"]
+    },
     choices: [
       { id: "c_pickup_chaos_take", label: "Loot Chaos off Royce.",
         next: "act1_pickup_aftermath", mutex: "mtx_maelstrom_iconic",
@@ -1170,6 +1182,10 @@ const DB_ACT1 = {
     timer: null, bug: null,
     bug: "Lingering in the penthouse too long causes Adam Smasher to reappear and instantly kill V.",
     src: "Nehan — dropped by Saburo Arasaka. Added in Patch 2.0.",
+    saveBefore: { // R-013: this card appears inside a no-save stretch, so "save now" may be too late
+      text: "You may not be able to save inside Konpeki Plaza. Your safe save is the one from before the cab ride after the Afterlife briefing.",
+      basis: ["B_act1.md#act1_heist_saburo"]
+    },
     choices: [
       { id: "c_heist_nehan", label: "Loot Nehan from Saburo's body.",
         next: "act1_heist_roof",
@@ -1187,6 +1203,10 @@ const DB_ACT1 = {
     desc: "An optional objective, not the escape route. Two guards stand between you and Saburo's AV; Satori is leaning against a seat inside it.",
     timer: null, bug: null,
     src: "Satori — inside Saburo Arasaka's personal AV on the rooftop landing pad.",
+    saveBefore: { // R-013: this card appears inside a no-save stretch, so "save now" may be too late
+      text: "You may not be able to save inside Konpeki Plaza. Your safe save is the one from before the cab ride after the Afterlife briefing.",
+      basis: ["B_act1.md#act1_heist_roof"]
+    },
     choices: [
       { id: "c_heist_satori", label: "Detour to the roof. Take Satori from the AV.",
         next: "act1_heist_escape",
@@ -1204,6 +1224,10 @@ const DB_ACT1 = {
     desc: "Jackie dies in the car. Delamain asks where to send the remains. Three functional answers, two distinct outcomes.",
     timer: null, bug: null,
     src: "\u201CNowhere. Wait for me here\u201D delivers the remains to the family anyway — it is the family outcome under another label. A fourth line, \u201CJust… give me a minute\u201D, is a stall and resolves nothing.",
+    saveBefore: { // R-013: this card appears inside a no-save stretch, so "save now" may be too late
+      text: "You may not be able to save inside Konpeki Plaza. Your safe save is the one from before the cab ride after the Afterlife briefing.",
+      basis: ["B_act1.md#act1_heist_escape"]
+    },
     choices: [
       { id: "c_heist_jackie_family", label: "\u201CTake him home, to his family.\u201D",
         next: "act2_hub", mutex: "mtx_jackie",
@@ -2260,6 +2284,10 @@ const DB_ENDGAME = {
     desc: "Panam's tanks through the wall. At Mikoshi the run splits one last time.",
     timer: null, bug: null,
     src: "Temperance / New Dawn Fades is a Mikoshi sub-choice, not a route selected on the rooftop.",
+    saveBefore: { // R-013: this card appears inside a no-save stretch, so "save now" may be too late
+      text: "Save before opening the Mikoshi chamber. If you can't, your last save is the one from before sitting next to Misty.",
+      basis: ["D1_act3.md#mikoshi-is-there-a-save-before-the-vjohnny-choice"]
+    },
     choices: [
       { id: "c_star_body", label: "Take your body back. Leave with the Aldecaldos.",
         next: "act3_epilogue", setWorld: { outcome: "star" },
@@ -2275,6 +2303,10 @@ const DB_ENDGAME = {
     act: 3, type: "RESOLUTION", arc: null,
     desc: "Rogue at your side into the tower. Same Mikoshi split at the end.",
     timer: null, bug: null, src: null,
+    saveBefore: { // R-013: this card appears inside a no-save stretch, so "save now" may be too late
+      text: "Save after the Smasher fight, before Mikoshi. If you can't, your last save is the one from before sitting next to Misty.",
+      basis: ["D1_act3.md#mikoshi-is-there-a-save-before-the-vjohnny-choice"]
+    },
     choices: [
       { id: "c_sun_body", label: "Take your body back. Become a legend.",
         next: "act3_epilogue", setWorld: { outcome: "sun" },
@@ -2292,6 +2324,10 @@ const DB_ENDGAME = {
     timer: null,
     bug: "Dying here sends you back to before Embers. There is no checkpoint inside the run.",
     src: "The secret ending resolves as a modified Sun or Temperance.",
+    saveBefore: { // R-013: this card appears inside a no-save stretch, so "save now" may be too late
+      text: "No saving on this route. Your last save is the one from before sitting next to Misty.",
+      basis: ["D1_act3.md#mikoshi-is-there-a-save-before-the-vjohnny-choice"]
+    },
     choices: [
       { id: "c_reaper_body", label: "Take your body back.",
         next: "act3_epilogue", setWorld: { outcome: "reaper" },
@@ -2308,6 +2344,10 @@ const DB_ENDGAME = {
     desc: "Arasaka's terms. A surviving Takemura changes who meets you on the other side, and a spared Oda walks in with him.",
     timer: null, bug: null,
     src: "Takemura appears in Totalimmortal only if he was saved at Search and Destroy; Oda only if he was also spared.",
+    saveBefore: { // R-013: this card appears inside a no-save stretch, so "save now" may be too late
+      text: "Saving comes back at points on this route: save when you can before the final choice. Otherwise use your save from before sitting next to Misty.",
+      basis: ["D1_act3.md#resolution-nodes-reachable-from-the-rooftop"]
+    },
     choices: [
       { id: "c_devil_earth", label: "Refuse the engram. Take the six months.",
         next: "act3_epilogue", setWorld: { outcome: "devil" },
@@ -3593,11 +3633,18 @@ function proveEndingUnreachable(state, k) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   PHASE 9 · P1 · 9.1a — SAVE POINT ADVISOR: DETECTOR (engine only, no UI).
-   Spec: docs/phase9/P1_SAVE_POINT_ADVISOR_SPEC.md §4 (ratified R-012).
+   PHASE 9 · P1 · 9.1a — SAVE SUGGESTER: DETECTOR (engine only, no UI).
+   Spec: docs/phase9/P1_SAVE_POINT_ADVISOR_SPEC.md (re-scoped by R-013).
 
-   A fork is CONSEQUENTIAL when some legal choice permanently closes
-   something that is still open: an item, an ending, or an arc (botched).
+   A fork is CONSEQUENTIAL when its choice permanently changes the run, so the
+   player should save first. Categories (the notification's wording, R-013):
+     story     — the legal choices lead to different permanent story state
+                 (storySignature: world, flags, romance, mutex locks, arcs)
+     item      — a choice closes an open item
+     ending    — a choice closes an open ending
+     questline — a choice fails (botches) an arc
+     ponr / terminal / timer — always, regardless of the above
+   story / item / ending / questline need a real fork (2+ legal choices).
    Per choice: step with the engine's own stepState(), then apply the
    engine's own necessary-condition proofs (proveItemUnreachable,
    proveEndingUnreachable) to the stepped state. Deviation from the spec's
@@ -3607,6 +3654,16 @@ function proveEndingUnreachable(state, k) {
    forbids hand copies of derived keys). Pure function of replayed state
    (I1/I2); stores nothing (I6). CI holds it honest against the solver.
    ═══════════════════════════════════════════════════════════════════════ */
+/* The permanent story state a choice can fork. Johnny affinity is cumulative points, not a branch, and
+   pathHistory / visitedNodes are bookkeeping, so neither counts (R-013). */
+function storySignature(s) {
+  const rom = { primary: s.romance.primary || null };
+  SPEC.romanceKeys.forEach(k => { rom[k] = s.romance[k] ? s.romance[k].stage : null; });
+  const sortObj = o => Object.keys(o).sort().map(k => [k, o[k]]);
+  return JSON.stringify([sortObj(s.world), sortObj(s.flags), rom, sortObj(s.mutexTaken),
+    s.completedArcs.slice().sort(), s.botchedArcs.slice().sort()]);
+}
+const SAVE_LOSS_REASONS = ["item", "ending", "questline"];
 function adviseFork(state) {
   const t0 = performance.now();
   const node = activeNode(state.pathHistory);
@@ -3631,10 +3688,17 @@ function adviseFork(state) {
     });
     const endings = openEnds.filter(k => proveEndingUnreachable(s2, k));
     const botched = s2.botchedArcs.filter(a => !state.botchedArcs.includes(a));
-    return { id: c.id, items, endings, botched };
+    return { id: c.id, items, endings, botched, story: storySignature(s2) };
   });
   const reasons = [];
-  if (choices.some(x => x.items.length || x.endings.length || x.botched.length)) reasons.push("loss");
+  // Each needs an alternative to save FOR: with one legal choice there is no fork (e.g. act3_plr).
+  if (legal.length > 1) {
+    if (new Set(choices.map(x => x.story)).size > 1) reasons.push("story");
+    if (choices.some(x => x.items.length)) reasons.push("item");
+    if (choices.some(x => x.endings.length)) reasons.push("ending");
+    if (choices.some(x => x.botched.length)) reasons.push("questline");
+  }
+  choices.forEach(x => { delete x.story; });
   // Always a fork (spec §4.3), regardless of what the proofs find.
   if (n.type === "PONR" || legal.some(c => c.ponr)) reasons.push("ponr");
   if (legal.some(c => c.mutex === "mtx_ending_terminal")) reasons.push("terminal");
@@ -4197,6 +4261,23 @@ function validateDB() {
       const u = [...new Set(m)];
       return u.length <= 1 ? [] : u;
     })());
+
+  // V24 — R-013 (Save Suggester). A saveBefore line is { text: 1–160 chars, basis: research anchors }.
+  // (V24/V25 were redefined by R-013; their 9.1b versions never shipped.)
+  add("V24", "saveBefore lines: text 1–160 chars, basis research anchors, no other keys",
+    Object.entries(questDB).filter(([, n]) => n.saveBefore).flatMap(([id, n]) => {
+      const sb = n.saveBefore, f = [];
+      const BASIS = /^(A_save_mechanics|B_act1|C1_act2a|C2_act2b|D1_act3|D2_phantom_liberty|SAVE_WINDOWS|VERIFICATION)\.md#[\w.-]+$/;
+      Object.keys(sb).filter(k => k !== "text" && k !== "basis").forEach(k => f.push(id + ": unknown key " + k));
+      if (typeof sb.text !== "string" || !sb.text.trim() || sb.text.length > 160) f.push(id + ": text must be 1–160 chars");
+      if (!Array.isArray(sb.basis) || !sb.basis.length || sb.basis.some(b => !BASIS.test(b))) f.push(id + ": basis must be research anchors");
+      return f;
+    }));
+
+  // V25 — a saveBefore line sits only on a decision node (2+ choices, PONR or timer). The harness adds:
+  // every saveBefore node must be one the detector actually flags (no orphan text).
+  add("V25", "saveBefore only on decision nodes",
+    Object.entries(questDB).filter(([, n]) => n.saveBefore && !((n.choices || []).length >= 2 || n.type === "PONR" || n.timer)).map(([id]) => id));
 
   add("V15", "Every recovery:'herold' entry declares recoveryVerified as a boolean",
     arsenalRegistry.filter(i => i.recovery === "herold" && typeof i.recoveryVerified !== "boolean")
@@ -5051,6 +5132,31 @@ GOLDEN.push({
       });
       assert(checked > 0, "G41 checked no item pairs at " + nid);
     });
+  }
+});
+
+/* G42 — R-013: the Save Suggester notifies on story divergence as well as losses. Pure story forks
+   (Jackie's remains at the Delamain, Takemura at Search and Destroy) must flag "story"; a known item
+   fork (Kongou at the penthouse) must flag "item"; the All Foods hub (routing, no permanent fork) must
+   not flag at all. Paths are checked for legality step by step. */
+GOLDEN.push({
+  id: "G42_save_suggester_categories",
+  desc: "R-013: story divergence and item loss are detected; a routing hub is not",
+  run() {
+    const walk = (who, path) => { let cur = replay(who, []);
+      path.forEach(st => { assert(choiceStatus(cur, lookupChoice(st.node, st.choiceId)).ok, "G42 path step blocked: " + st.choiceId);
+        cur = replay(who, cur.pathHistory.concat([st])); }); return cur; };
+    const upTo = (path, node) => path.slice(0, path.findIndex(st => st.node === node));
+    const at = (who, path, node) => { const s = walk(who, path); assert(activeNode(s.pathHistory) === node, "G42 path must end at " + node); return adviseFork(s); };
+    const escape = at(FEM_V, upTo(PATH_ACT1_DONE, "act1_heist_escape"), "act1_heist_escape");
+    assert(escape.reasons.includes("story"), "Jackie's remains must flag story, got " + escape.reasons.join(","));
+    const sad = at(D44_MASC_SK, upTo(PATH_PREREQS, "arc2_search_destroy"), "arc2_search_destroy");
+    assert(sad.reasons.includes("story"), "Search and Destroy must flag story, got " + sad.reasons.join(","));
+    const pent = at(FEM_V, upTo(PATH_ACT1_DONE, "act1_heist_penthouse"), "act1_heist_penthouse");
+    assert(pent.reasons.includes("item"), "the penthouse must flag item (Kongou), got " + pent.reasons.join(","));
+    const af = at(FEM_V, PATH_TO_ALLFOODS, "act1_pickup_allfoods");
+    assert(!af.consequential, "the All Foods hub must not flag, got " + af.reasons.join(","));
+    assert(![escape, sad, pent, af].some(a => a.reasons.includes("loss")), "the old 'loss' reason is gone (R-013 categories)");
   }
 });
 
@@ -6287,14 +6393,17 @@ function renderHudInto(root, state) {
   const pend = buckets.PENDING.length;
   const share = n => total ? (n / total * 100).toFixed(2) + "%" : "0%";
 
-  const group = (key, label, colour, note) => {
+  /* D-45: the items ARE the group's content, so bind them to the heading — a left rule in the group's
+     colour around the block and a coloured ▸ on every item. Before, "LOST TO A CHOICE — 1" was followed
+     by the item in plain grey on the next line, reading as a heading missing its subject. */
+  const group = (key, label, colour, note, rule) => {
     const items = buckets[key];
     if (!items.length) return "";
-    return `<div class="mt-2">
+    return `<div data-arsenal-group="${esc(key)}" class="mt-2 border-l-2 ${rule} pl-2">
       <div class="${colour} text-[10px] mb-1">${esc(label)} — ${items.length}${note ? ' · ' + esc(note) : ""}</div>
-      ${items.map(i => `<div class="text-[11px] text-slate-400 pl-2">${esc(i.name)}${
-        i.caveat ? `<div class="text-[10px] rt-dim pl-2">⚠ ${esc(i.caveat)}</div>` : ""
-      }</div>`).join("")}
+      ${items.map(i => `<div data-arsenal-item="1" class="flex gap-2 text-[11px] text-slate-300"><span class="${colour}">▸</span><div class="flex-1">${esc(i.name)}${
+        i.caveat ? `<div class="text-[10px] rt-dim">⚠ ${esc(i.caveat)}</div>` : ""
+      }</div></div>`).join("")}
     </div>`;
   };
 
@@ -6317,12 +6426,12 @@ function renderHudInto(root, state) {
       <span class="text-pink">■ lost ${lost}</span>
       <span class="text-slate-600">■ ahead ${pend}</span>
     </div>
-    ${group("RECOVERABLE", "BUY BACK FROM HEROLD", "text-neon", "confirmed Dogtown stock")}
-    ${group("RECOVERY_UNVERIFIED", "MAYBE AT HEROLD — UNVERIFIED", "text-slate-400", "stock unconfirmed; treat as lost until verified")}
-    ${group("CHOICE_LOCKED", "LOST TO A CHOICE", "text-pink", "never restocked")}
-    ${group("MISSED_PERMANENT", "MISSED — GONE", "text-pink")}
-    ${group("ACQUIRED", "COLLECTED", "text-cy")}
-    ${group("PENDING", "STILL AHEAD", "text-slate-600")}`
+    ${group("RECOVERABLE", "BUY BACK FROM HEROLD", "text-neon", "confirmed Dogtown stock", "border-neon/60")}
+    ${group("RECOVERY_UNVERIFIED", "MAYBE AT HEROLD — UNVERIFIED", "text-slate-400", "stock unconfirmed; treat as lost until verified", "border-edge")}
+    ${group("CHOICE_LOCKED", "LOST TO A CHOICE", "text-pink", "never restocked", "border-pink")}
+    ${group("MISSED_PERMANENT", "MISSED — GONE", "text-pink", "", "border-pink")}
+    ${group("ACQUIRED", "COLLECTED", "text-cy", "", "border-cy")}
+    ${group("PENDING", "STILL AHEAD", "text-slate-600", "", "border-edge")}`
     : `<span class="text-[10px] text-slate-600">Registry empty.</span>`;
 
   /* ── PHASE 6 — EXPIRY RADAR (STATIC). Every timing window DECLARED in the
@@ -7107,7 +7216,7 @@ function wireApp() {
   // D-35c: build stamp is SINGLE-SOURCE. Two hand-edited stamps diverged once
   // (setup badge stuck at 8.4 while the header said 8.5) — the deploy-staleness
   // check exists to catch stale builds, so the stamp itself must be un-forkable.
-  const BUILD_STAMP = "BUILD 8.9.2 · 2026-10-08";
+  const BUILD_STAMP = "BUILD 8.9.3 · 2026-10-08";
   document.getElementById("build-stamp").textContent = BUILD_STAMP;
   document.getElementById("build-stamp-setup").textContent = "v3.1 · " + BUILD_STAMP;
 
