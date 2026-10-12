@@ -363,6 +363,7 @@ button{font-family:var(--ui);}
 .border-neon\/40{border-color:rgba(253,224,71,.45);}
 .border-neon\/50{border-color:rgba(253,224,71,.55);}
 .border-neon\/60{border-color:rgba(253,224,71,.65);}
+.opacity-60{opacity:.85;}   /* D-48: resolved Expiry Radar timers are dimmed; the class had no rule (L24 failed on any run with one). .85, not Tailwind's .6, so every dimmed line stays ≥4.5:1 (measured; Shabab, 2026-10-12; same value as D-46l's archived cards); like .disabled\:opacity-30 above, the name is a label, the value is ours. */
 
 /* ── states ──────────────────────────────────────────────────────── */
 .hover\:border-cy:hover{border-color:var(--cy);}
@@ -4183,6 +4184,44 @@ function importRunText(text) {
   return true;
 }
 
+/* ── D-48 — the class-rule scanner behind V26 (source) and G47 (its own self-test and a rendered resolved timer).
+   Returns every class token written in `markup` that no rule in `css` defines. A class attribute is read to its
+   REAL closing quote: template placeholders `${...}` are skipped by brace depth (strings inside them are jumped
+   over), and the quoted strings inside a placeholder are class names too. The first V26 stopped at the first inner
+   quote of a ternary, so "opacity-60" in a resolved-timer ternary was never seen (D-48). Not a class name, so not
+   checked: a token glued to a placeholder (`text-${c}`) or anything with code characters. Known limit: a name
+   split by concatenation inside a placeholder ("btn-" + x) reads as the fragment "btn-". `ovl-wrap` is a JS hook.
+   The attribute regex is built from pieces so this function does not match itself when V26 scans the source. ── */
+function stylesheetOf(src) {
+  return (String(src).match(/<style[^>]*>[\s\S]*?<\/style>/g) || []).join("\n");   // every <style> block (preview/offline bake add their own)
+}
+function classTokensWithoutRule(markup, css) {
+  const defined = new Set(); (css.match(/\.((?:\\.|[A-Za-z0-9_-])+)/g) || []).forEach(m => defined.add(m.slice(1).replace(/\\/g, "")));
+  const HOOKS = new Set(["ovl-wrap"]); const missing = new Set();
+  const take = s => s.split(/\s+/).forEach(t => {
+    if (t && /^[A-Za-z0-9_\-:/\[\].]+$/.test(t) && !defined.has(t) && !HOOKS.has(t)) missing.add(t); });
+  const re = new RegExp("\\bcl" + "ass=\"", "g"); let m;
+  while ((m = re.exec(markup))) {
+    let i = re.lastIndex, depth = 0, stat = "", expr = "";
+    for (; i < markup.length; i++) {
+      const c = markup[i];
+      if (depth === 0) {
+        if (c === '"') break;                                            // the attribute's real closing quote
+        if (c === "$" && markup[i + 1] === "{") { stat += "\u0000"; depth = 1; i++; continue; }
+        stat += c;
+      } else if (c === "{") depth++;
+      else if (c === "}") depth--;
+      else if (c === '"' || c === "'" || c === "`") {                    // a string inside a placeholder: jump it, keep it
+        let j = i + 1; while (j < markup.length && markup[j] !== c) { if (markup[j] === "\\") j++; j++; }
+        if (c !== "`") expr += markup.slice(i + 1, j) + "\n";
+        i = j;
+      }
+    }
+    take(stat); take(expr); re.lastIndex = i + 1;
+  }
+  return [...missing].sort();
+}
+
 /* ═══════════════════════════════════════════════════════════════════════
    §8.2 validateDB()
    ═══════════════════════════════════════════════════════════════════════ */
@@ -4355,17 +4394,13 @@ function validateDB() {
   // V26 — D-46c: every class token written in markup or templates has a rule in the stylesheet (the audit found 14
   // without one). L24 checks the live DOM; this checks the source, so classes behind conditions count too. Tokens
   // with template or code characters are not class names; `ovl-wrap` is a JS hook, allowed by name.
+  // D-48 (8.9.5): the scan now lives in classTokensWithoutRule(), which also reads the quoted strings inside a
+  // template placeholder (a ternary), where the first version stopped at the inner quote and missed "opacity-60".
   add("V26", "Every class name in markup and templates has a stylesheet rule",
     (() => {
       const src = (typeof __RAW_SOURCE__ === "string" && __RAW_SOURCE__)
                || (document.documentElement && document.documentElement.outerHTML) || "";
-      // Every <style> block counts (a preview build and the offline bake add their own), not only the first.
-      const css = (src.match(/<style[^>]*>[\s\S]*?<\/style>/g) || []).join("\n");
-      const defined = new Set(); (css.match(/\.((?:\\.|[A-Za-z0-9_-])+)/g) || []).forEach(m => defined.add(m.slice(1).replace(/\\/g, "")));
-      const HOOKS = new Set(["ovl-wrap"]); const missing = new Set();
-      (src.match(/class="[^"]*"/g) || []).forEach(a => a.slice(7, -1).split(/\s+/).forEach(t => {
-        if (t && /^[A-Za-z0-9_\-:/\[\].]+$/.test(t) && !defined.has(t) && !HOOKS.has(t)) missing.add(t); }));
-      return [...missing];
+      return classTokensWithoutRule(src, stylesheetOf(src));
     })());
 
   add("V15", "Every recovery:'herold' entry declares recoveryVerified as a boolean",
@@ -5176,6 +5211,47 @@ GOLDEN.push({
     const early = endingStatus(fresh, "reaper", undet);
     assert(early.label === "STILL POSSIBLE" && early.needs.length === 2,
       "UNDETERMINED with both gates still ahead must be STILL POSSIBLE naming both, got " + JSON.stringify(early));
+  }
+});
+
+/* G47 — D-48: the class-rule guard must see a class name hidden in a template ternary, and a RESOLVED Expiry Radar
+   timer must render only classes that have a stylesheet rule. 8.9.4 shipped "opacity-60" with no rule: V26's source
+   scan stopped at the first inner quote of the ternary, and no CI state ever rendered a resolved timer (L24, the
+   live-DOM twin, only fails on a run that has one). Part 1 pins the scanner on synthetic markup (built from pieces so
+   this block does not trip V26 itself); part 2 renders the Telemetry for a run past a timer node and checks it. */
+GOLDEN.push({
+  id: "G47_class_rules_ternaries_and_resolved_timer",
+  desc: "classTokensWithoutRule reads class names inside template ternaries; a resolved Expiry Radar timer renders only classes with a rule",
+  run() {
+    const css = ".border{border:1px solid;}.p-2{padding:.5rem;}.border-edge{border-color:red;}.a\\/40{color:red;}";
+    const attr = body => "<div cl" + "ass=\"" + body + "\"></div>";
+    const scan = body => classTokensWithoutRule(attr(body), css).join(",");
+    assert(scan("p-2 zz-static") === "zz-static", "a plain class without a rule must be reported, got " + scan("p-2 zz-static"));
+    assert(scan("p-2 border-edge a/40") === "", "classes with rules (escaped slash included) must pass, got " + scan("p-2 border-edge a/40"));
+    // The D-48 shape: a double-quoted class inside a ${...} ternary. The first V26 (class attribute up to the first inner quote) saw "border" only.
+    const ternary = "border ${t.resolved ? \"border-edge\" : \"zz-live\"} p-2 ${t.resolved ? \"zz-dim\" : \"\"}";
+    assert(scan(ternary) === "zz-dim,zz-live", "both ternary arms must be checked, got " + scan(ternary));
+    const legacy = (attr(ternary).match(/cl(?:ass)="[^"]*"/g) || []).join(" ");   // what the first V26 looked at
+    assert(!/zz-dim/.test(legacy), "precondition: the first V26's scan could not see the ternary string (it must not, or this test proves nothing)");
+    assert(scan("p-2 ${a ? \"}\" : \"zz-after-brace\"} ${list.map(x => ({ k: x })).length ? 'zz-single' : 'p-2'}") === "zz-after-brace,zz-single",
+      "a brace inside a string and braces inside the expression must not end the placeholder early, got " +
+      scan("p-2 ${a ? \"}\" : \"zz-after-brace\"} ${list.map(x => ({ k: x })).length ? 'zz-single' : 'p-2'}"));
+    assert(scan("text-${c} p-2") === "", "a token glued to a placeholder is not a class name and is not checked");
+    assert(classTokensWithoutRule(attr("p-2") + attr("zz-second"), css).join(",") === "zz-second", "every attribute in the markup is scanned, not only the first");
+
+    // Part 2: a run past a timer node renders a RESOLVED radar card; every class on the Telemetry must have a rule.
+    const src = (typeof __RAW_SOURCE__ === "string" && __RAW_SOURCE__)
+             || (document.documentElement && document.documentElement.outerHTML) || "";
+    const resolved = replay(MASC_V, PATH_TO_RIDERS.concat([P("arc2_riders_storm", "c_rs_side_panam")]));
+    assert(declaredTimers(resolved).some(t => t.resolved), "precondition: the state has a resolved timer");
+    const probe = document.createElement("div");
+    renderHudInto(probe, resolved);
+    const html = String(probe.innerHTML || "") + Array.from(probe.children || []).map(c => c.innerHTML).join("");
+    assert(/RESOLVED/.test(html), "the Telemetry must render a RESOLVED timer card for this state");
+    if (src) {
+      const bad = classTokensWithoutRule(html, stylesheetOf(src));
+      assert(bad.length === 0, "rendered Telemetry with a resolved timer uses classes with no stylesheet rule: " + bad.join(" "));
+    }
   }
 });
 
@@ -7457,7 +7533,7 @@ function wireApp() {
   // D-35c: build stamp is SINGLE-SOURCE. Two hand-edited stamps diverged once
   // (setup badge stuck at 8.4 while the header said 8.5) — the deploy-staleness
   // check exists to catch stale builds, so the stamp itself must be un-forkable.
-  const BUILD_STAMP = "BUILD 8.9.4 · 2026-10-11";
+  const BUILD_STAMP = "BUILD 8.9.5 · 2026-10-12";
   document.getElementById("build-stamp").textContent = BUILD_STAMP;
   document.getElementById("build-stamp-setup").textContent = "v3.1 · " + BUILD_STAMP;
 
