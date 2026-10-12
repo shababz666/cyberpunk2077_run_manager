@@ -8,18 +8,22 @@
      structural depends on the network; all layout and colour is inlined. -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<!-- D-46k: the fonts stylesheet loads non-blocking (preload, then swapped to a stylesheet on load; <noscript> keeps
+     the plain link). A slow font host no longer holds the first paint hostage; the fallback stacks render meanwhile. -->
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Share+Tech+Mono&display=swap" onload="this.onload=null;this.rel='stylesheet';this.setAttribute('data-swapped','1')">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet"></noscript>
 <title>CP2077 Tactical Run Manager</title>
 <style>
 /* ══════════════════════════════════════════════════════════════════════
-   SELF-CONTAINED STYLESHEET. No CDN, no webfonts, no network of any kind.
+   SELF-CONTAINED STYLESHEET. No CSS from a CDN. The two Google Fonts above are progressive
+   enhancement, loaded non-blocking; the fallback stacks carry the look offline.
    Replaces the Tailwind CDN build so the file renders identically when
    opened straight from a phone's Files app, offline, or from a USB stick.
 
    Readability pass baked in:
      · smallest type raised 10px -> 12px, 11px -> 13px
      · dimmest greys lifted well clear of the background
-     · body copy set in a system UI stack; the display font is kept for
+     · body copy in Share Tech Mono (system monospace fallbacks); the display face is kept for
        headings and labels, where it reads fine and carries the theme
    ══════════════════════════════════════════════════════════════════════ */
 
@@ -95,12 +99,15 @@ button{font-family:var(--ui);}
 
 /* Phase 7 — Ghost Wall. Six socket states, one colour each; undetermined must
    never look like failure, so it is neutral grey with a "?", not red. */
-.wall-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:4px;}
+/* D-46j: 72px minimum column (was 64) so every name fits two lines even in the fallback monospace that renders
+   before the webfont arrives (CI's Linux runner clipped one name at 820px with DejaVu Sans Mono). 4 columns still
+   fit a 375px phone (4 × 72 + 3 × 4 = 300px in a 317px panel). */
+.wall-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:4px;}
 .wall-sock{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;
   min-height:48px;padding:4px 2px;border:1px solid var(--edge);background:var(--void);color:#64748b;
   font:inherit;font-size:9px;line-height:1.1;text-align:center;cursor:pointer;overflow:hidden;}
 .wall-sock .wall-ico{font-size:14px;line-height:1;margin-bottom:2px;}
-.wall-sock .wall-name{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.wall-sock .wall-name{max-width:100%;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;white-space:normal;overflow-wrap:anywhere;text-align:center;line-height:1.2;}   /* D-46j: 2-line clamp, same 9px */
 .wall-sock .wall-cond{position:absolute;top:1px;right:3px;font-size:9px;color:#94a3b8;}
 .wall-sock:hover,.wall-sock.wall-sel{outline:1px solid var(--neon);outline-offset:-1px;}
 /* ═══════════════════════════════════════════════════════════════════════
@@ -112,10 +119,10 @@ button{font-family:var(--ui);}
    No size change anywhere. AA on #050508: --rt-mid ≈8.2:1, --rt-dim ≈6.6:1.
    ═══════════════════════════════════════════════════════════════════════ */
 :root{--rt-dim:#9fabbe;--rt-mid:#b4c0d1;--edge-int:#5d6f92;}
-/* Lever 3 (Shabab-approved on device): reading floor 10px→11px, touch only.
-   Desktop identical by construction. */
+/* Lever 3 (Shabab-approved on device): reading floor on touch. Its original 11px rule for .text-[10px] was dead —
+   the later global 12px rule always won — and was removed in 8.9.4 (D-46i); the audit's computed-style diff proved
+   zero change across three touch viewports. Desktop identical by construction. */
 @media (pointer: coarse){
-  .text-\[10px\]{font-size:11px;line-height:1.5;}
   .text-\[10px\].rt,.text-\[10px\].rt-dim{font-size:13px;line-height:1.55;}
   .text-xs.rt,.lore-body{font-size:15px;line-height:1.55;}
   .lore-kv{font-size:13px;}
@@ -131,6 +138,11 @@ button{font-family:var(--ui);}
    slate 6.7:1, rose 6:1, dim 5.3:1 (all ≥ 4.5:1). D-27: acquired and
    recoverable were both yellow before this block. */
 :root{--st-acq:#f5c542;--st-live:#22d3ee;--st-rec:#4ade80;--st-unv:#94a3b8;--st-unr:#fb7185;--st-und:#8b95a7;}
+/* D-46g — the SAME six tokens wherever a state is named: Wall sockets and legend, Telemetry arsenal, Help. Before,
+   cyan meant "have it" in Telemetry but "live" on the Wall, and yellow meant "recoverable" in Telemetry and Help but
+   "acquired" on the Wall. L28 asserts the parity on every render. */
+.stc-acq{color:var(--st-acq);}.stc-live{color:var(--st-live);}.stc-rec{color:var(--st-rec);}.stc-unv{color:var(--st-unv);}.stc-unr{color:var(--st-unr);}.stc-und{color:var(--st-und);}
+.stb-acq{border-color:var(--st-acq);}.stb-rec{border-color:var(--st-rec);}.stb-unv{border-color:var(--st-unv);}.stb-unr{border-color:var(--st-unr);}
 .wall-sock[data-state="acquired"]{border-color:var(--st-acq);background:var(--st-acq);color:#050508;font-weight:700;box-shadow:0 0 10px rgba(245,197,66,.35);}
 .wall-sock[data-state="live"]{border-color:var(--st-live);color:var(--st-live);background:rgba(34,211,238,.06);}
 .wall-sock[data-state="recoverable"]{border-color:var(--st-rec);color:var(--st-rec);}
@@ -169,7 +181,7 @@ button{font-family:var(--ui);}
 /* Phase 8 — career panel */
 .career-run{border:1px solid var(--edge);padding:8px;}
 .career-run.career-active{border-color:var(--neon);}
-.career-run.career-archived{opacity:.55;}
+.career-run.career-archived{opacity:.85;}   /* D-46l: .55 put 105 characters under AA (lowest 2.68:1); .85 keeps every line ≥4.5:1 (audit sweep), still recessed. L31 guards it. */
 .cr-btn{border:1px solid var(--edge);padding:4px 8px;font-size:10px;color:#94a3b8;background:transparent;}
 .cr-btn:hover{border-color:var(--cy);color:var(--cy);}
 /* D-34/D-35: tappables must LOOK tappable — on EVERY pointer type (the 8.5 cut
@@ -210,7 +222,15 @@ button{font-family:var(--ui);}
   #data-menu.open{display:flex;flex-wrap:wrap;gap:.5rem;width:100%;}
 }
 .cr-btn.cr-danger:hover{border-color:var(--pink);color:var(--pink);}
-@media (pointer:coarse){.cr-btn{min-height:32px;padding:6px 10px;}}
+@media (pointer:coarse){.cr-btn{min-height:44px;padding:6px 10px;}}
+/* D-46e — 44px on touch for every control. Career buttons and setup tiles grow for real; rewind, panel toggles,
+   header buttons, spoiler chips and every button inside an overlay keep their look and gain an invisible ≥44px hit
+   zone (the ::after box is what a finger meets). The jump pill and wall sockets are already ≥44px. L26 measures. */
+@media (pointer:coarse){
+  .opt,button[data-choice]{min-height:44px;}   /* choice rows with a one-line label measured 40px on tablets */
+  button[data-rewind],#hud-toggle,#wall-toggle,#career-toggle,#app-header button,.spoiler-chip,.fixed.inset-0 button:not(.wall-sock):not(.sheet-close){position:relative;}
+  button[data-rewind]::after,#hud-toggle::after,#wall-toggle::after,#career-toggle::after,#app-header button::after,.spoiler-chip::after,.fixed.inset-0 button:not(.wall-sock):not(.sheet-close)::after{content:"";position:absolute;left:-3px;right:-3px;top:50%;height:max(100%,44px);transform:translateY(-50%);}
+}
 
 /* Panel corner brackets — the notch reads as deliberate rather than clipped. */
 .clip-notch{position:relative;z-index:0;}
@@ -228,6 +248,7 @@ button{font-family:var(--ui);}
 .bar{height:6px;background:#171727;overflow:hidden;border-radius:2px;}
 .bar>i{display:block;height:100%;}
 .no-ios-zoom{font-size:16px;line-height:1.45;}
+@media (pointer:coarse){#career-modal-input,#career-modal-select,#career-modal-text,#reset-input{font-size:16px;}}   /* D-46f: iOS zooms on focus below 16px; desktop unchanged. L27 guards it. */
 
 /* ── layout ──────────────────────────────────────────────────────── */
 /* D-28: `.hidden` used !important, which beat `.lg\:block` — every ≥1024px
@@ -249,6 +270,20 @@ button{font-family:var(--ui);}
 .order-first{order:-9999;}
 .gap-1{gap:.25rem;}.gap-2{gap:.5rem;}.gap-3{gap:.75rem;}.gap-6{gap:1.5rem;}
 .gap-x-4{column-gap:1rem;}.gap-y-2{row-gap:.5rem;}
+/* D-46c — class names in use with no rule since the Tailwind CDN was removed (the audit counted 14 in the DOM):
+   the Wall sheet's scrim, the legend gaps, modal button alignment, the textarea height, overlay centring, the jump
+   pill's neon edge, the QA banner tints, the choice-row classes. V26 (source) and L24 (live DOM) keep the set
+   complete from here on; "ovl-wrap" is a JS hook and is allowed by name. */
+.gap-x-3{column-gap:.75rem;}.gap-y-0\.5{row-gap:.125rem;}.gap-y-1{row-gap:.25rem;}
+.space-y-0\.5>*+*{margin-top:.125rem;}
+.min-w-0{min-width:0;}.min-h-full{min-height:100%;}.h-40{height:10rem;}.pt-1{padding-top:.25rem;}
+.justify-end{justify-content:flex-end;}
+.text-base{font-size:16px;}.text-\[12px\]{font-size:14px;line-height:1.55;}
+.text-slate-100{color:var(--t-hi);}.text-slate-200{color:#e2e8f0;}
+.bg-void\/80{background-color:rgba(5,5,8,.8);}
+.bg-cy\/10{background-color:rgba(34,211,238,.1);}.bg-pink\/15{background-color:rgba(251,113,133,.15);}
+.border-cy\/30{border-color:rgba(34,211,238,.3);}.border-neon{border-color:var(--neon);}
+.choice-body{flex:1 1 55%;}.choice-attr{flex:0 1 auto;max-width:100%;margin-left:1.5rem;}
 .space-y-1>*+*{margin-top:.25rem;}.space-y-2>*+*{margin-top:.5rem;}
 .space-y-3>*+*{margin-top:.75rem;}
 .space-y-4>*+*{margin-top:1rem;}.space-y-5>*+*{margin-top:1.25rem;}
@@ -368,6 +403,7 @@ button{font-family:var(--ui);}
   .lg\:hidden{display:none;}
   .lg\:order-none{order:0;}
   .lg\:sticky{position:sticky;}
+  .lg\:sticky.aside-unstuck{position:static;}   /* D-46h: set by fitAside() when the column is taller than the window */
   .lg\:top-24{top:6rem;}
   .lg\:grid-cols-\[1fr_360px\]{grid-template-columns:1fr 380px;}
   .no-ios-zoom{font-size:13px;}
@@ -775,7 +811,7 @@ setTimeout(function(){
           <ul class="space-y-1">
             <li>• <span class="text-slate-300">Johnny affinity</span> — shown for interest only. It does <em>not</em> gate the secret ending, despite what many guides claim. The Reaper route depends solely on two specific choices.</li>
             <li>• <span class="text-slate-300">Romance</span> — four tracked arcs, each 0 to 4. Ones your body type and voice make impossible are marked LOCKED with the reason. Note that the <em>questlines</em> are almost always still completable; only the romance itself is gated.</li>
-            <li>• <span class="text-slate-300">Ending availability</span> — OPEN means still reachable right now. It updates on every choice, so you can watch a route close in real time. Temperance is a final sub-choice inside Star, Sun or Reaper rather than a route of its own. Taking the Phantom Liberty cure marks every base ending LOCKED — Tower path taken.</li>
+            <li>• <span class="text-slate-300">Ending availability</span> — <span class="text-cy">OPEN</span> means you have earned it. <span class="text-neon">STILL POSSIBLE</span> means you have not earned it yet but nothing has closed it; the line under it says what is still needed (the Reaper reads STILL POSSIBLE after the right oil-fields lines, until the rooftop wait). CLOSED means it is gone for this run. It updates on every choice, so you can watch a route close in real time. Temperance is a final sub-choice inside Star, Sun or Reaper rather than a route of its own. Taking the Phantom Liberty cure marks every base ending LOCKED — Tower path taken.</li>
             <li>• <span class="text-slate-300">Two-gate flags</span> — the Reaper needs <code class="text-cy">reaperDialogue</code> from the Chippin' In oil-fields conversation and <code class="text-cy">reaperWait</code> from the rooftop wait. Either alone does nothing.</li>
             <li>• On a narrow screen the panel is collapsed by default. The summary line shows affinity, arc counts and how many endings remain open; tap <span class="text-slate-300">Show</span> for the rest.</li>
           </ul>
@@ -785,12 +821,12 @@ setTimeout(function(){
           <h3 class="text-neon text-[11px] mb-1">THE ARSENAL AUDIT</h3>
           <p>Every tracked iconic sits in one of six states, and the distinctions among the last four are the whole point of the tool:</p>
           <ul class="mt-2 space-y-1">
-            <li>• <span class="text-cy">ACQUIRED</span> — you took it.</li>
+            <li>• <span class="stc-acq">ACQUIRED</span> — you took it.</li>
             <li>• <span class="text-slate-300">PENDING</span> — still ahead of you, still gettable.</li>
-            <li>• <span class="text-neon">RECOVERABLE</span> — you walked past it, and Herold Lowe at the EBM Petrochem Stadium black market in Dogtown is <em>confirmed</em> to restock it. Needs Phantom Liberty.</li>
-            <li>• <span class="text-slate-400">RECOVERY_UNVERIFIED</span> — you walked past it and Herold <em>might</em> restock it, but his stock for this item is unconfirmed across patches. Treat it as lost until you see it on his shelf: a false safety net costs you the item, while pessimism only costs a trip to Dogtown.</li>
-            <li>• <span class="text-pink">CHOICE_LOCKED</span> — gone because of a decision, not an oversight. Herold will never stock these. Chaos is the clearest case: spare Royce at The Pickup and it is gone for the run, no matter what you do later.</li>
-            <li>• <span class="text-pink">MISSED_PERMANENT</span> — walked past, and nothing can restock it. Usually a run without Phantom Liberty.</li>
+            <li>• <span class="stc-rec">RECOVERABLE</span> — you walked past it, and Herold Lowe at the EBM Petrochem Stadium black market in Dogtown is <em>confirmed</em> to restock it. Needs Phantom Liberty.</li>
+            <li>• <span class="stc-unv">RECOVERY_UNVERIFIED</span> — you walked past it and Herold <em>might</em> restock it, but his stock for this item is unconfirmed across patches. Treat it as lost until you see it on his shelf: a false safety net costs you the item, while pessimism only costs a trip to Dogtown.</li>
+            <li>• <span class="stc-unr">CHOICE_LOCKED</span> — gone because of a decision, not an oversight. Herold will never stock these. Chaos is the clearest case: spare Royce at The Pickup and it is gone for the run, no matter what you do later.</li>
+            <li>• <span class="stc-unr">MISSED_PERMANENT</span> — walked past, and nothing can restock it. Usually a run without Phantom Liberty.</li>
           </ul>
           <p class="mt-2">Before the point of no return, a pre-flight manifest lists exactly which items and arcs are about to be lost. Nothing commits until you confirm it.</p>
         </section>
@@ -818,7 +854,7 @@ setTimeout(function(){
         <section>
           <h3 class="text-neon text-[11px] mb-1">PHASE 7 — GHOST WALL &amp; FEASIBILITY</h3>
           <ul class="space-y-1">
-            <li>• <span class="text-slate-300">Ghost Wall</span> — the 30-slot H10 stash wall as six-state sockets: <span style="color:#facc15">acquired</span>, <span class="text-cy">live</span> (still ahead and provably reachable), <span class="text-neon">recoverable</span> (Herold confirmed), <span class="text-slate-400">unverified recovery</span>, <span class="text-pink">unreachable</span> (proven lost — tap it to see the node that closed it, for next run), and <span class="text-slate-500">undetermined</span> (the solver could not settle it, or the item lives outside the decision graph). Undetermined is not failure. It is the tool refusing to guess.</li>
+            <li>• <span class="text-slate-300">Ghost Wall</span> — the 30-slot H10 stash wall as six-state sockets: <span class="stc-acq">acquired</span>, <span class="stc-live">live</span> (still ahead and provably reachable), <span class="stc-rec">recoverable</span> (Herold confirmed), <span class="stc-unv">unverified recovery</span>, <span class="stc-unr">unreachable</span> (proven lost — tap it to see the node that closed it, for next run), and <span class="stc-und">undetermined</span> (the solver could not settle it, or the item lives outside the decision graph). Undetermined is not failure. It is the tool refusing to guess.</li>
             <li>• <span class="text-slate-300">Solver</span> — every "live" verdict is backed by a legal path the engine actually replayed; every "unreachable" by a proof or an exhaustive search. Panel groupings are sourced; exact socket positions are a display layout, not a claim about the room.</li>
             <li>• Untracked memorabilia (Skippy, Plan B, the crafted specs) stays undetermined by design — the wall is a career view of decision-bound loss, not an inventory.</li>
           </ul>
@@ -3632,6 +3668,43 @@ function proveEndingUnreachable(state, k) {
   return !!(towerLocked || noDlcTower || starDead || sunDead || reaperDead || outcomeSet);
 }
 
+/* D-47 — Telemetry ending status. state.endings[k] means EARNED (Reaper: both
+   gates), so showing it as OPEN/CLOSED read CLOSED for a correct Gate A run
+   until the rooftop. Three states instead (Shabab, 2026-10-11):
+     CLOSED          proven: solver UNREACHABLE, or a missing requirement that
+                     no choice still ahead can supply (necessary condition)
+     OPEN            earned
+     STILL POSSIBLE  not earned, not proven closed, every missing requirement
+                     still ahead; `needs` lists them
+   UNDETERMINED (solver budget) falls to the structural check — Shabab's call:
+   STILL POSSIBLE + needs, never an unproven CLOSED. */
+const ENDING_NEEDS = {
+  star:   [{ arc: SPEC.endingArcs.star }],
+  sun:    [{ arc: SPEC.endingArcs.sun }],
+  reaper: [{ flag: "reaperDialogue", say: "the exact oil-fields lines in Chippin' In" },
+           { flag: "reaperWait",     say: "the rooftop wait at Nocturne" }],
+  tower:  [{ flag: "tower" }]
+};
+function endingStatus(state, k, feas) {
+  const f = feas && feas.endings && feas.endings[k];
+  if ((f && f.status === FEAS.UNREACHABLE) || proveEndingUnreachable(state, k)) return { label: "CLOSED", needs: [] };
+  if (state.endings[k]) return { label: "OPEN", needs: [] };
+  if (k === "temperance") {
+    const via = ["star", "sun", "reaper"].filter(x => endingStatus(state, x, feas).label !== "CLOSED");
+    return via.length ? { label: "STILL POSSIBLE", needs: ["one of: " + via.map(x => ENDING_LABELS[x]).join(", ")] }
+                      : { label: "CLOSED", needs: [] };
+  }
+  const start = activeNode(state.pathHistory), cone = start ? graphCone(start) : new Set();
+  const needs = [];
+  for (const r of ENDING_NEEDS[k] || []) {
+    if (r.flag ? state.flags[r.flag] : state.completedArcs.includes(r.arc)) continue;
+    const at = [...cone].find(n => questDB[n].choices.some(c => r.flag ? c.setFlag && c.setFlag[r.flag] === true : c.setDone === r.arc));
+    if (!at) return { label: "CLOSED", needs: [] };      // nothing ahead can supply it: proven
+    needs.push(r.say || questDB[at].title);
+  }
+  return { label: "STILL POSSIBLE", needs };
+}
+
 /* ═══════════════════════════════════════════════════════════════════════
    PHASE 9 · P1 · 9.1a — SAVE SUGGESTER: DETECTOR (engine only, no UI).
    Spec: docs/phase9/P1_SAVE_POINT_ADVISOR_SPEC.md (re-scoped by R-013).
@@ -4278,6 +4351,22 @@ function validateDB() {
   // every saveBefore node must be one the detector actually flags (no orphan text).
   add("V25", "saveBefore only on decision nodes",
     Object.entries(questDB).filter(([, n]) => n.saveBefore && !((n.choices || []).length >= 2 || n.type === "PONR" || n.timer)).map(([id]) => id));
+
+  // V26 — D-46c: every class token written in markup or templates has a rule in the stylesheet (the audit found 14
+  // without one). L24 checks the live DOM; this checks the source, so classes behind conditions count too. Tokens
+  // with template or code characters are not class names; `ovl-wrap` is a JS hook, allowed by name.
+  add("V26", "Every class name in markup and templates has a stylesheet rule",
+    (() => {
+      const src = (typeof __RAW_SOURCE__ === "string" && __RAW_SOURCE__)
+               || (document.documentElement && document.documentElement.outerHTML) || "";
+      // Every <style> block counts (a preview build and the offline bake add their own), not only the first.
+      const css = (src.match(/<style[^>]*>[\s\S]*?<\/style>/g) || []).join("\n");
+      const defined = new Set(); (css.match(/\.((?:\\.|[A-Za-z0-9_-])+)/g) || []).forEach(m => defined.add(m.slice(1).replace(/\\/g, "")));
+      const HOOKS = new Set(["ovl-wrap"]); const missing = new Set();
+      (src.match(/class="[^"]*"/g) || []).forEach(a => a.slice(7, -1).split(/\s+/).forEach(t => {
+        if (t && /^[A-Za-z0-9_\-:/\[\].]+$/.test(t) && !defined.has(t) && !HOOKS.has(t)) missing.add(t); }));
+      return [...missing];
+    })());
 
   add("V15", "Every recovery:'herold' entry declares recoveryVerified as a boolean",
     arsenalRegistry.filter(i => i.recovery === "herold" && typeof i.recoveryVerified !== "boolean")
@@ -5033,6 +5122,60 @@ GOLDEN.push({
     assert(refused.botchedArcs.includes("arc_chippin"), "refusing control must botch the chain");
     assert(arsenalStatus(refused, arsenalRegistry.find(i => i.id === "itm_malorian")) === "CHOICE_LOCKED",
       "the Malorian must be CHOICE_LOCKED once Chippin' In is unreachable");
+  }
+});
+
+/* G46 — D-47: Telemetry must tell a correct Gate A run apart from a ruined one.
+   It read CLOSED for both from the oil fields to the rooftop, because it showed
+   the EARNED flag (both gates). Asserted on the RENDERED HUD rows, not only on
+   endingStatus, so reverting the HUD to state.endings goes red. Identity is
+   D44_MASC_SK: the only one PATH_PREREQS is legal for. */
+function hudEndingStatus(state, k) {
+  const probe = document.createElement("div");
+  renderHudInto(probe, state);
+  const html = Array.from(probe.children).map(c => c.innerHTML).join("");
+  const m = html.match(new RegExp('data-ending="' + k + '" data-ending-status="([^"]*)"'));
+  return m ? m[1] : null;
+}
+GOLDEN.push({
+  id: "G46_ending_status_three_states",
+  desc: "Telemetry: Reaper reads STILL POSSIBLE after Gate A, CLOSED after the wrong lines or a skipped Chippin' In, OPEN with both gates",
+  run() {
+    const upTo = lines => PATH_PREREQS.concat([
+      P("act2_hub",               "c_hub_johnny"),
+      P("arc3_tapeworm",          "c_tw_give_control"),
+      P("arc3_chippin_ebunike",   "c_ce_kill_grayson"),
+      P("arc3_chippin_oilfields", lines)]);
+    const toRoof = [P("arc3_blistering_love", "c_bl_complete"), P("act2_hub", "c_hub_ponr"), P("act3_ponr", "c_ponr_proceed")];
+
+    const gateA = replay(D44_MASC_SK, upTo("c_co_exact_chain"));
+    assert(gateA.endings.reaper === false, "precondition: Gate A alone has not EARNED the Reaper");
+    assert(hudEndingStatus(gateA, "reaper") === "STILL POSSIBLE", "after the exact chain the Reaper must read STILL POSSIBLE, got " + hudEndingStatus(gateA, "reaper"));
+    const st = endingStatus(gateA, "reaper", reachableFrom(gateA));
+    assert(st.needs.length === 1 && /rooftop/.test(st.needs[0]), "needs must name only the rooftop wait, got " + JSON.stringify(st.needs));
+
+    const atPonr = replay(D44_MASC_SK, upTo("c_co_exact_chain").concat(toRoof));
+    assert(hudEndingStatus(atPonr, "reaper") === "STILL POSSIBLE", "Gate A at the Point of No Return must still read STILL POSSIBLE");
+    const armed = replay(D44_MASC_SK, upTo("c_co_exact_chain").concat(toRoof, [P("act3_nocturne_rooftop", "c_noct_wait")]));
+    assert(hudEndingStatus(armed, "reaper") === "OPEN", "both gates must read OPEN");
+
+    const wrong = replay(D44_MASC_SK, upTo("c_co_other_lines"));
+    assert(hudEndingStatus(wrong, "reaper") === "CLOSED", "the wrong lines must read CLOSED");
+    const skipped = replay(D44_MASC_SK, PATH_PREREQS.concat([P("act2_hub", "c_hub_ponr"), P("act3_ponr", "c_ponr_proceed")]));
+    assert(hudEndingStatus(skipped, "reaper") === "CLOSED", "past the Point of No Return without Chippin' In the Reaper must read CLOSED");
+
+    const fresh = replay(D44_MASC_SK, []);
+    assert(hudEndingStatus(fresh, "reaper") === "STILL POSSIBLE", "a fresh run must read STILL POSSIBLE, never CLOSED");
+    assert(hudEndingStatus(fresh, "devil") === "OPEN", "a base ending stays OPEN");
+
+    // Solver budget exhausted (UNDETERMINED): the structural check decides. On real paths the solver
+    // completes past the Point of No Return, so force UNDETERMINED to pin the fallback itself.
+    const undet = { endings: { reaper: { status: FEAS.UNDETERMINED } } };
+    assert(endingStatus(skipped, "reaper", undet).label === "CLOSED",
+      "UNDETERMINED + no oil-fields node ahead must be CLOSED (structural proof)");
+    const early = endingStatus(fresh, "reaper", undet);
+    assert(early.label === "STILL POSSIBLE" && early.needs.length === 2,
+      "UNDETERMINED with both gates still ahead must be STILL POSSIBLE naming both, got " + JSON.stringify(early));
   }
 });
 
@@ -6077,6 +6220,17 @@ function typeColor(t) {
 /* The header is sticky, so scrolling an element to the literal top hides its
    first line underneath it. Everything here offsets by the real header height
    rather than a guessed constant. */
+/* D-46h — desktop side column. When the three panels are taller than the window minus the header, a sticky column
+   can never be scrolled to its end (the audit measured 3,650 px of aside in a 900 px window: Wall and Career
+   unreachable until the page end). Measured after every render and on resize; stickiness is dropped below that
+   threshold (Shabab, DQ-06). The DOM-less QA shim has no offsetHeight, so this is a no-op there. */
+function fitAside() {
+  const a = document.querySelector("main > aside");
+  if (!a || !a.classList || !(window.matchMedia && window.matchMedia("(min-width:1024px)").matches)) return;
+  a.classList.remove("aside-unstuck");
+  const room = window.innerHeight - headerOffset() - 24;
+  if (typeof a.offsetHeight === "number" && a.offsetHeight > room) a.classList.add("aside-unstuck");
+}
 function headerOffset() {
   const h = document.querySelector("header");
   return (h ? h.getBoundingClientRect().height : 0) + 12;
@@ -6275,16 +6429,16 @@ function renderFlowInto(container, proj, state, interactive) {
               ${blocked ? "border-edge text-slate-600 cursor-not-allowed"
                         : "border-edge hover:border-cy hover:bg-cy/5 text-slate-200"}"
             ${blocked ? "disabled" : ""}>
-            <div class="flex items-start gap-2">
+            <div class="flex flex-wrap items-start gap-2">
               <span class="${blocked ? "text-slate-700" : "text-cy"}">${blocked ? "✕" : "▸"}</span>
-              <div class="flex-1">
+              <div class="flex-1 min-w-0 choice-body">
                 <div>${esc(c.label)}${takenHere ? ` <span class="text-[10px] text-slate-600">(taken)</span>` : ""}</div>
                 ${c.desc ? `<div class="text-[10px] rt-dim mt-0.5">${
                   takenHere ? esc(c.desc) : spoilerMask(card.node + "|" + c.id + "|desc", esc(c.desc), blocked)
                 }</div>` : ""}
                 ${c.next === null ? `<div class="text-[10px] text-slate-600 mt-0.5">terminal</div>` : ""}
               </div>
-              ${c.attr ? `<span class="text-[10px] text-neon shrink-0">${esc(c.attr)}</span>` : ""}
+              ${c.attr ? `<span class="text-[10px] text-neon choice-attr">${esc(c.attr)}</span>` : ""}
             </div>
           </button>
           ${blocked ? `<div class="text-[10px] text-pink mt-1 pl-3">${esc(st.reason)}</div>` : ""}
@@ -6310,7 +6464,7 @@ function renderFlowInto(container, proj, state, interactive) {
   }
 }
 
-function renderHudInto(root, state) {
+function renderHudInto(root, state, feas) {
   root.innerHTML = "";
   const mk = html => { const d = document.createElement("div"); d.innerHTML = html; return d; };
 
@@ -6348,20 +6502,22 @@ function renderHudInto(root, state) {
   state.botchedArcs.forEach(a => arcs += `<span class="text-[10px] border border-pink/40 text-pink px-2 py-0.5">${esc(a)} botched</span>`);
   if (!arcs) arcs = `<span class="text-[10px] text-slate-600">No arcs resolved yet.</span>`;
 
-  const labels = { devil: "The Devil", plr: "Path of Least Resistance", star: "The Star",
-                   sun: "The Sun", temperance: "Temperance", reaper: "(Don't Fear) The Reaper",
-                   tower: "The Tower" };
+  // D-47: OPEN / STILL POSSIBLE / CLOSED from endingStatus, not the earned flag alone.
+  const fe = feas || reachableFrom(state);
   let endings = "";
-  Object.entries(labels).forEach(([k, label]) => {
-    const open = state.endings[k];
+  ["devil", "plr", "star", "sun", "temperance", "reaper", "tower"].forEach(k => {
+    const label = ENDING_LABELS[k];
     const towerLock = state.towerTerminal && k !== "tower";
+    const st = endingStatus(state, k, fe);
     const note = towerLock ? "LOCKED — Tower path taken"
                : (k === "tower" && !state.identity.dlc) ? "REQUIRES PHANTOM LIBERTY"
-               : open ? "OPEN" : "CLOSED";
-    const col = towerLock ? "text-pink" : open ? "text-cy" : "text-slate-600";
-    endings += `<div class="flex justify-between text-[11px]">
+               : st.label;
+    const col = towerLock ? "text-pink" : note === "OPEN" ? "text-cy" : note === "STILL POSSIBLE" ? "text-neon" : "text-slate-600";
+    const needs = !towerLock && note === "STILL POSSIBLE" && st.needs.length
+      ? `<div class="text-[10px] text-slate-500 pl-2" data-ending-needs="${k}">needs: ${esc(st.needs.join(" + "))}</div>` : "";
+    endings += `<div class="flex justify-between gap-2 text-[11px]" data-ending="${k}" data-ending-status="${esc(note)}">
       <span class="text-slate-400">${esc(label)}${k === "temperance" ? ' <span class="text-slate-700">(sub)</span>' : ""}</span>
-      <span class="${col}">${esc(note)}</span></div>`;
+      <span class="${col} shrink-0">${esc(note)}</span></div>${needs}`;
   });
 
   if (state.danglingSteps && state.danglingSteps.length) {
@@ -6409,28 +6565,28 @@ function renderHudInto(root, state) {
 
   const arsenal = total ? `
     <div class="flex items-baseline gap-2 mb-2">
-      <span class="text-cy text-sm">${got}<span class="text-slate-600">/${total}</span></span>
+      <span class="stc-acq text-sm">${got}<span class="text-slate-600">/${total}</span></span>
       <span class="text-[10px] text-slate-500">collected</span>
-      ${lost ? `<span class="ml-auto text-[10px] text-pink">${lost} lost</span>` : ""}
+      ${lost ? `<span class="ml-auto text-[10px] stc-unr">${lost} lost</span>` : ""}
     </div>
     <div class="bar mb-2" style="display:flex">
-      <i style="background:var(--cy);width:${share(got)}"></i>
-      <i style="background:var(--neon);width:${share(recov)}"></i>
-      <i style="background:#64748b;width:${share(unver)}"></i>
-      <i style="background:var(--pink);width:${share(lost)}"></i>
+      <i style="background:var(--st-acq);width:${share(got)}"></i>
+      <i style="background:var(--st-rec);width:${share(recov)}"></i>
+      <i style="background:var(--st-unv);width:${share(unver)}"></i>
+      <i style="background:var(--st-unr);width:${share(lost)}"></i>
     </div>
     <div class="flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] mb-1">
-      <span class="text-cy">■ have ${got}</span>
-      <span class="text-neon">■ recoverable ${recov}</span>
-      <span style="color:#94a3b8">■ unverified ${unver}</span>
-      <span class="text-pink">■ lost ${lost}</span>
+      <span class="stc-acq">■ have ${got}</span>
+      <span class="stc-rec">■ recoverable ${recov}</span>
+      <span class="stc-unv">■ unverified ${unver}</span>
+      <span class="stc-unr">■ lost ${lost}</span>
       <span class="text-slate-600">■ ahead ${pend}</span>
     </div>
-    ${group("RECOVERABLE", "BUY BACK FROM HEROLD", "text-neon", "confirmed Dogtown stock", "border-neon/60")}
-    ${group("RECOVERY_UNVERIFIED", "MAYBE AT HEROLD — UNVERIFIED", "text-slate-400", "stock unconfirmed; treat as lost until verified", "border-edge")}
-    ${group("CHOICE_LOCKED", "LOST TO A CHOICE", "text-pink", "never restocked", "border-pink")}
-    ${group("MISSED_PERMANENT", "MISSED — GONE", "text-pink", "", "border-pink")}
-    ${group("ACQUIRED", "COLLECTED", "text-cy", "", "border-cy")}
+    ${group("RECOVERABLE", "BUY BACK FROM HEROLD", "stc-rec", "confirmed Dogtown stock", "stb-rec")}
+    ${group("RECOVERY_UNVERIFIED", "MAYBE AT HEROLD — UNVERIFIED", "stc-unv", "stock unconfirmed; treat as lost until verified", "stb-unv")}
+    ${group("CHOICE_LOCKED", "LOST TO A CHOICE", "stc-unr", "never restocked", "stb-unr")}
+    ${group("MISSED_PERMANENT", "MISSED — GONE", "stc-unr", "", "stb-unr")}
+    ${group("ACQUIRED", "COLLECTED", "stc-acq", "", "stb-acq")}
     ${group("PENDING", "STILL AHEAD", "text-slate-600", "", "border-edge")}`
     : `<span class="text-[10px] text-slate-600">Registry empty.</span>`;
 
@@ -6760,6 +6916,7 @@ async function bakeOfflineCopy() {
     const clone = document.documentElement.cloneNode(true);
     // Strip the network dependency the baked copy no longer needs.
     clone.querySelectorAll('link[href*="fonts.googleapis"],link[rel="preconnect"]').forEach(n => n.remove());
+    clone.querySelectorAll("noscript").forEach(n => { if (/fonts\.googleapis/.test(n.textContent || "")) n.remove(); });   // D-46k: the no-JS fallback link too
     // Reset transient UI so the copy opens clean.
     clone.querySelectorAll("#flow,#hud-body,#wall-body,#ponr-body,#qa-validate,#qa-golden,#qa-layout,#qa-inventory").forEach(n => { if (n) n.innerHTML = ""; });
     clone.querySelectorAll("textarea").forEach(n => { n.textContent = ""; n.removeAttribute("value"); });
@@ -6818,9 +6975,10 @@ function render(opts) {
 
   // HUD — fill the persistent shell. Rebuilding the shell here would destroy
   // the mobile collapse state on every choice.
-  renderHudInto(document.getElementById("hud-body"), stateData);
-  // Phase 7 — one solver pass per render, shared by the wall and the HUD.
+  // Phase 7 — one solver pass per render, shared by the wall and the HUD
+  // (D-47: the HUD now actually receives it, for its ending statuses).
   const feas = reachableFrom(stateData);
+  renderHudInto(document.getElementById("hud-body"), stateData, feas);
   const wallBody = document.getElementById("wall-body");
   if (wallBody) {
     // One run list per render: the wall and its click handlers must see the
@@ -6845,6 +7003,7 @@ function render(opts) {
   if (solverEl) solverEl.textContent = `${feas.meta.expanded}/${feas.meta.budget} states · ${feas.meta.complete ? "exhaustive" : "budget hit"} · ${feas.meta.ms}ms`;
   const done = stateData.completedArcs.length, bot = stateData.botchedArcs.length;
   const openEnd = Object.values(stateData.endings).filter(Boolean).length;
+  fitAside();   // D-46h: before the layout audit measures the column
   if (QA.validate.length) renderQA();
   document.getElementById("hud-peek").textContent =
     `J ${stateData.johnny.affinity}/${stateData.johnny.cap} · arcs ${done}${bot ? "+" + bot + "✕" : ""}` +
@@ -7087,6 +7246,86 @@ function layoutAudit() {
   const body = getComputedStyle(document.body).fontSize;
   add("L5", "Base font size is at least 14px", parseFloat(body) >= 14, body);
 
+  /* ── D-46 guards (hotfix 8.9.4). Each would have caught one of the 2026-10-08 audit's findings. ── */
+  // L24 — every class name in the live DOM has a rule (finding 3). JS hook classes are allowed by name.
+  if (document.styleSheets && document.querySelectorAll) {
+    const HOOKS = new Set(["ovl-wrap"]);
+    const defined = new Set();
+    const walkRules = rules => { for (const r of rules || []) { if (r.selectorText) (r.selectorText.match(/\.((?:\\.|[A-Za-z0-9_-])+)/g) || []).forEach(x => defined.add(x.slice(1).replace(/\\/g, ""))); if (r.cssRules) walkRules(r.cssRules); } };
+    try { for (const ss of document.styleSheets) { try { walkRules(ss.cssRules); } catch (e) {} } } catch (e) {}
+    const missing = new Set();
+    document.querySelectorAll("[class]").forEach(el => (el.getAttribute("class") || "").split(/\s+/).forEach(t => { if (t && !defined.has(t) && !HOOKS.has(t)) missing.add(t); }));
+    add("L24", "Every class name in the DOM has a stylesheet rule (hook classes excepted)", missing.size === 0, missing.size ? [...missing].slice(0, 10).join(" · ") : defined.size + " rules, 0 missing");
+  }
+  // L25 — overlay contract, static part (finding 4): role, aria-modal and a resolvable label on every overlay but the
+  // setup screen and the QA panel. Behaviour (focus in, Escape, focus back) is L33 in the browser leg.
+  {
+    const ovs = [...document.querySelectorAll(".fixed.inset-0")].filter(o => o.id !== "setup" && o.id !== "qa-panel");
+    // A closed overlay may label itself with an element it renders on open (the wall sheet's title), so the label
+    // must resolve only while the overlay is shown; closed ones must at least declare it.
+    const bad = ovs.filter(o => { const lab = o.getAttribute("aria-labelledby");
+      return o.getAttribute("role") !== "dialog" || o.getAttribute("aria-modal") !== "true" || !lab || (!o.classList.contains("hidden") && !document.getElementById(lab)); }).map(o => "#" + o.id);
+    add("L25", "Every overlay is a labelled modal dialog (role, aria-modal, aria-labelledby)", bad.length === 0, bad.length ? bad.join(", ") : ovs.length + " overlays");
+  }
+  if (window.matchMedia && window.matchMedia("(pointer: coarse)").matches) {
+    // L26 — ≥44px effective hit area for every visible, enabled control on touch (finding 5); the ::after zone counts.
+    const small = [];
+    document.querySelectorAll('button, [role="button"]').forEach(el => {
+      if (el.disabled || el.offsetParent === null) return;
+      const r = el.getBoundingClientRect(); if (!r.width) return;
+      const zone = Math.max(r.height, parseFloat(getComputedStyle(el, "::after").height) || 0);
+      if (zone < 44) small.push((el.id || (el.className || "").split(" ")[0] || el.tagName.toLowerCase()) + " " + Math.round(zone) + "px");
+    });
+    add("L26", "Every visible control has a ≥44px hit area on touch (box or ::after zone)", small.length === 0, small.length ? small.slice(0, 8).join(" · ") : "all ≥44px");
+    // L27 — text controls ≥16px on touch so iOS does not zoom on focus (finding 6); hidden modals count.
+    const zoomy = [...document.querySelectorAll('input:not([type="hidden"]):not([type="file"]), select, textarea')].filter(el => parseFloat(getComputedStyle(el).fontSize) < 16).map(el => (el.id || el.tagName.toLowerCase()) + " " + getComputedStyle(el).fontSize);
+    add("L27", "Text controls are ≥16px on touch (no iOS zoom on focus)", zoomy.length === 0, zoomy.length ? zoomy.join(" · ") : "all ≥16px");
+  }
+  // L28 — one colour per state across Wall, Telemetry and Help (finding 7): every .stc-* element computes the wall
+  // legend's colour for that state.
+  {
+    // Anchors by TEXT, not by class, so a surface that drops the token class is caught, not excused: the Telemetry
+    // legend ("■ have / recoverable / unverified / lost") and the Help's state words.
+    const pairs = [["recoverable", "stc-rec", /^■ recoverable/, "RECOVERABLE"], ["unverified-recovery", "stc-unv", /^■ unverified/, "RECOVERY_UNVERIFIED"],
+                   ["unreachable", "stc-unr", /^■ lost/, "MISSED_PERMANENT"], ["acquired", "stc-acq", /^■ have/, "ACQUIRED"], ["live", "stc-live", null, null], ["undetermined", "stc-und", null, null]];
+    const bad = []; let checked = 0;
+    const hudSpans = [...document.querySelectorAll("#hud-body span")], helpSpans = [...document.querySelectorAll("#help-modal li > span")];
+    pairs.forEach(([st, cls, legendRe, helpWord]) => { const ref = document.querySelector('.wall-lg[data-state="' + st + '"]'); if (!ref) return; checked++; const want = getComputedStyle(ref).color;
+      const probe = (el, label) => { if (!el) return; const got = getComputedStyle(el).color; if (got !== want) bad.push(label + " " + got + " ≠ wall " + want); };
+      document.querySelectorAll("." + cls).forEach(el => probe(el, cls));
+      if (legendRe) probe(hudSpans.find(e => legendRe.test(e.textContent.trim())), "telemetry " + st);
+      if (helpWord) probe(helpSpans.find(e => e.textContent.trim() === helpWord), "help " + helpWord); });
+    add("L28", "Status colours agree across Wall, Telemetry and Help (legend, state words, .stc-*)", bad.length === 0, bad.length ? [...new Set(bad)].slice(0, 6).join(" · ") : checked + " states checked");
+  }
+  // L29 — desktop side column reachable (finding 8): at ≥1024px a column taller than the window must not be sticky.
+  if (window.matchMedia && window.matchMedia("(min-width:1024px)").matches) {
+    const a = document.querySelector("main > aside");
+    if (a) { const room = window.innerHeight - headerOffset() - 24, h = a.getBoundingClientRect().height, sticky = getComputedStyle(a).position === "sticky";
+      add("L29", "Desktop side column: taller than the window ⇒ not sticky, every panel reachable", !(sticky && h > room), Math.round(h) + "px column, " + Math.round(room) + "px room, " + (sticky ? "sticky" : "in flow")); }
+  }
+  // L30 — wall names fit their socket (finding 9), measured only when the wall is laid out.
+  {
+    const names = [...document.querySelectorAll(".wall-sock .wall-name")].filter(n => n.offsetParent !== null);
+    if (names.length) { const clipped = names.filter(n => n.scrollHeight > n.clientHeight + 1 || n.scrollWidth > n.clientWidth + 1);
+      add("L30", "Wall names are not clipped (two-line clamp)", clipped.length === 0, clipped.length + " of " + names.length + " clipped"); }
+  }
+  // L31 — archived career cards keep ≥4.5:1 text contrast through their dimming (finding 10).
+  {
+    const cards = [...document.querySelectorAll(".career-run.career-archived")].filter(c => c.offsetParent !== null);
+    if (cards.length) { const bad = [];
+      cards.forEach(card => {
+        const op = parseFloat(getComputedStyle(card).opacity); const stack = []; let n = card.parentElement;
+        while (n && n !== document.documentElement) { const c = parseColor(getComputedStyle(n).backgroundColor); if (c && c[3] > 0) { stack.push(c); if (c[3] >= 1) break; } n = n.parentElement; }
+        const bg = compositeStack(stack);
+        card.querySelectorAll("span, div, button").forEach(el => {
+          if (!Array.from(el.childNodes).some(x => x.nodeType === 3 && x.textContent.trim())) return;
+          const fg = parseColor(getComputedStyle(el).color); if (!fg) return;
+          const mix = [0, 1, 2].map(k => fg[k] * op + bg[k] * (1 - op)); const ratio = contrastRatio(mix, bg);
+          if (ratio < 4.5) bad.push(((el.className || "").split(" ")[0] || el.tagName.toLowerCase()) + " " + ratio.toFixed(2));
+        }); });
+      add("L31", "Archived run cards keep ≥4.5:1 text contrast through their dimming", bad.length === 0, bad.length ? [...new Set(bad)].slice(0, 6).join(" · ") : cards.length + " archived card(s) checked"); }
+  }
+
   return out;
 }
 
@@ -7165,10 +7404,12 @@ function wireSetup() {
   document.querySelectorAll("#setup [data-group]").forEach(group => {
     const key = group.getAttribute("data-group");
     group.querySelectorAll(".opt").forEach(btn => {
+      btn.setAttribute("aria-pressed", "false");   // D-46b: the tiles are toggle buttons; the stylesheet's selected rule keys on this
       btn.addEventListener("click", () => {
         group.querySelectorAll(".opt").forEach(b => b.className =
           "opt border border-edge px-3 py-2 text-sm hover:border-cy" + (key === "bodyType" || key === "voice" ? " text-left" : ""));
         btn.className = "opt border border-cy bg-cy/10 text-cy px-3 py-2 text-sm" + (key === "bodyType" || key === "voice" ? " text-left" : "");
+        group.querySelectorAll(".opt").forEach(b => b.setAttribute("aria-pressed", String(b === btn)));   // D-46b
         const v = btn.getAttribute("data-val");
         setupSel[key] = key === "dlc" ? (v === "true") : v;
         const done = setupSel.bodyType && setupSel.voice && setupSel.lifepath && setupSel.dlc !== null;
@@ -7216,7 +7457,7 @@ function wireApp() {
   // D-35c: build stamp is SINGLE-SOURCE. Two hand-edited stamps diverged once
   // (setup badge stuck at 8.4 while the header said 8.5) — the deploy-staleness
   // check exists to catch stale builds, so the stamp itself must be un-forkable.
-  const BUILD_STAMP = "BUILD 8.9.3 · 2026-10-08";
+  const BUILD_STAMP = "BUILD 8.9.4 · 2026-10-11";
   document.getElementById("build-stamp").textContent = BUILD_STAMP;
   document.getElementById("build-stamp-setup").textContent = "v3.1 · " + BUILD_STAMP;
 
@@ -7357,6 +7598,7 @@ function wireApp() {
   };
   window.addEventListener("scroll", onViewportChange, { passive: true });
   window.addEventListener("resize", onViewportChange);
+  window.addEventListener("resize", fitAside);   // D-46h
 
   document.getElementById("bake-do").addEventListener("click", bakeOfflineCopy);
 
@@ -7534,6 +7776,37 @@ async function boot() {
   renderQA();
 }
 
+/* D-46d — overlays are dialogs. Each fixed full-screen overlay (except the setup screen, which is a screen, and the
+   QA panel) gets role=dialog, aria-modal and a label from its own heading; on open, focus moves to its safe control
+   (Close / Cancel, else the first focusable); Escape triggers that same control; Tab is trapped inside; on close,
+   focus returns to the button that opened it. Pure DOM, driven by the class flip the app already does; the engine is
+   untouched. The DOM-less QA shim has no MutationObserver, so it skips this. L25 (static) and L33 (behaviour) guard it. */
+(function overlayDialogs() {
+  if (typeof MutationObserver !== "function" || !document.querySelector) return;
+  const FOC = 'button:not([disabled]),[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
+  let lastBtn = null;
+  document.addEventListener("click", e => { lastBtn = e.target && e.target.closest ? e.target.closest("button,[role=button],a") : null; }, true);
+  ["help-modal", "paste-modal", "copy-modal", "reset-modal", "ponr-modal", "migrate-modal", "career-modal", "wall-sheet"].forEach(id => {
+    const ov = document.getElementById(id); if (!ov) return;
+    const h = ov.querySelector("h1,h2,h3"); if (h) { if (!h.id) h.id = id + "-title"; ov.setAttribute("aria-labelledby", h.id); }
+    ov.setAttribute("role", "dialog"); ov.setAttribute("aria-modal", "true");
+    const visible = () => Array.from(ov.querySelectorAll(FOC)).filter(x => x.offsetParent !== null);
+    const isOpen = () => !ov.classList.contains("hidden");
+    const safe = () => { const c = ov.querySelector('[id$="-close"],[id$="-cancel"]'); return c && c.offsetParent !== null ? c : null; };
+    let trigger = null;
+    document.addEventListener("keydown", e => {
+      if (!isOpen()) return;
+      if (e.key === "Escape") { const c = safe(); if (c) { e.preventDefault(); c.click(); } return; }
+      if (e.key === "Tab") { const f = visible(); if (!f.length) return; const a = document.activeElement;
+        if (!ov.contains(a) || (!e.shiftKey && a === f[f.length - 1])) { e.preventDefault(); f[0].focus(); }
+        else if (e.shiftKey && a === f[0]) { e.preventDefault(); f[f.length - 1].focus(); } }
+    });
+    new MutationObserver(() => {
+      if (isOpen()) { trigger = lastBtn; setTimeout(() => { const t = safe() || visible()[0]; if (t && isOpen()) t.focus(); }, 30); }
+      else if (trigger && document.contains(trigger)) { try { trigger.focus(); } catch (e) {} trigger = null; }
+    }).observe(ov, { attributes: true, attributeFilter: ["class"] });
+  });
+})();
 boot().catch(function (e) {
   window.__CP_BOOT_OK = false;
   if (typeof __cpFail === "function") __cpFail("Startup failed: " + (e && e.message ? e.message : e));
