@@ -5379,6 +5379,75 @@ GOLDEN.push({
   }
 });
 
+/* G43 — R-013 / 9.1c: the Save Suggester notice reads the way Shabab reviewed it. saveHint() builds the wording from
+   adviseFork(); this pins (1) the category order and the "and" join on the five-category Riders on the Storm card,
+   plus the order on every flagged card along three fixture walks; (2) the single-choice point of no return, flagged
+   regardless of a fork (spec "Trigger"); (3) the hub's Point-of-No-Return sentence, used when only the PONR route
+   costs anything (Shabab, 9.1c review); (4) the saveBefore passthrough on an All Foods card and an ending card, null
+   elsewhere; (5) silence on a non-fork, on the All Foods routing hub (G42) and for a node that is not the active one;
+   (6) the rendered flow: one notice, on the ACTIVE card, only when interactive. Every sentence was measured through
+   the shim on 2026-10-13 before it was pinned; a change to one is a wording decision for Shabab, not a test fix. */
+GOLDEN.push({
+  id: "G43_save_notice_wording",
+  desc: "saveHint: category order, PONR and hub sentences, saveBefore passthrough, nothing on a quiet card, one notice on the active interactive card",
+  run() {
+    const upTo = (path, node) => path.slice(0, path.findIndex(st => st.node === node));
+    const at = (who, path, node) => { const s = replay(who, path); assert(activeNode(s.pathHistory) === node, "G43 path must end at " + node + ", got " + activeNode(s.pathHistory)); return s; };
+    const hint = s => saveHint(s, activeNode(s.pathHistory));
+    // (1) order and join on the richest card
+    const riders = at(FEM_V, PATH_TO_RIDERS, "arc2_riders_storm");
+    const hr = hint(riders);
+    assert(hr && hr.reasons.length === 5, "Riders on the Storm must fire five categories, got " + (hr ? hr.reasons.join(",") : "no notice"));
+    assert(hr.sentence === "This choice changes which endings you can get, can lose an item, can fail a questline, changes the story and has a time limit.", "Riders wording/order: " + hr.sentence);
+    assert(hr.before === null, "Riders has no saveBefore line, got " + hr.before);
+    // ...and on every flagged card of three legal walks: a notice iff consequential, one phrase per reason, in order
+    const walk = (who, path) => { let cur = replay(who, []); const states = [cur];
+      path.forEach(st => { assert(choiceStatus(cur, lookupChoice(st.node, st.choiceId)).ok, "G43 path step blocked: " + st.choiceId); cur = replay(who, cur.pathHistory.concat([st])); states.push(cur); }); return states; };
+    let flagged = 0, quiet = 0, hubForm = 0;
+    [[FEM_V, PATH_TO_HUNT], [D44_MASC_SK, PATH_PREREQS], [FEM_V, PATH_TO_CYNOSURE]].forEach(([who, path]) => walk(who, path).forEach(s => {
+      const node = activeNode(s.pathHistory); if (!node) return;
+      const a = adviseFork(s), h = saveHint(s, node);
+      assert(!!h === a.consequential, node + ": a notice iff the card is consequential (" + a.consequential + ")");
+      if (!h) { quiet++; return; } flagged++;
+      if (/^Going to the Point of No Return can /.test(h.sentence)) { hubForm++; assert(!a.reasons.includes("story"), node + ": the hub form is only for cards that do not change the story"); return; }
+      const idx = SAVE_REASON_ORDER.map(r => h.sentence.indexOf(SAVE_REASON_TEXT[r]));
+      a.reasons.forEach(r => assert(idx[SAVE_REASON_ORDER.indexOf(r)] >= 0, node + ": reason " + r + " missing from \"" + h.sentence + "\""));
+      const present = idx.filter(i => i >= 0);
+      assert(present.every((v, i) => i === 0 || v > present[i - 1]), node + ": categories out of order in \"" + h.sentence + "\"");
+      assert(present.length === a.reasons.length && /^This choice .*\.$/.test(h.sentence), node + ": sentence shape \"" + h.sentence + "\"");
+    }));
+    assert(flagged >= 40 && quiet >= 20 && hubForm >= 1, "fixture coverage: " + flagged + " flagged, " + quiet + " quiet, " + hubForm + " hub-form (measured 52 / 26 / 7)");
+    // (2) the point of no return: one legal choice, flagged regardless
+    const ponr = at(FEM_V, PATH_ACT1_DONE.concat([P("act2_hub", "c_hub_ponr")]), "act3_ponr");
+    const hp = hint(ponr);
+    assert(adviseFork(ponr).choices.length === 1 && hp && hp.sentence === "This choice is a point of no return.", "PONR wording: " + JSON.stringify(hp));
+    // (3) the hub: only the PONR route costs anything, so the route is named instead of "this choice"
+    const hub = at(FEM_V, PATH_ACT1_DONE, "act2_hub");
+    const hh = hint(hub);
+    assert(hh && hh.sentence === "Going to the Point of No Return can lose items." && hh.reasons.join() === "item", "hub wording: " + JSON.stringify(hh));
+    assert(hh.before === null, "the hub has no saveBefore line");
+    // (4) saveBefore passthrough, verbatim, on an All Foods card and on an ending card
+    const royce = at(FEM_V, upTo(PATH_ACT1_DONE, "act1_pickup_royce"), "act1_pickup_royce");
+    assert(questDB.act1_pickup_royce.saveBefore && hint(royce).before === questDB.act1_pickup_royce.saveBefore.text, "Royce saveBefore passthrough: " + JSON.stringify(hint(royce)));
+    const devil = at(FEM_V, PATH_ACT1_DONE.concat([P("act2_hub", "c_hub_ponr"), P("act3_ponr", "c_ponr_proceed"), P("act3_nocturne_rooftop", "c_noct_hanako")]), "act3_devil");
+    const hd = hint(devil);
+    assert(hd && hd.sentence === "This choice changes which endings you can get and changes the story." && hd.before === questDB.act3_devil.saveBefore.text, "Devil wording + saveBefore: " + JSON.stringify(hd));
+    // (5) silence
+    const aftermath = at(FEM_V, upTo(PATH_ACT1_DONE, "act1_pickup_aftermath"), "act1_pickup_aftermath");
+    assert(adviseFork(aftermath).choices.length === 1 && hint(aftermath) === null, "a single-choice card gets no notice");
+    assert(hint(at(FEM_V, PATH_TO_ALLFOODS, "act1_pickup_allfoods")) === null, "the All Foods routing hub gets no notice");
+    assert(saveHint(riders, "act2_hub") === null, "no notice for a node that is not the active one");
+    // (6) the rendered flow (the same markup the live page builds)
+    const proj = buildProjection(riders.pathHistory);
+    const live = document.createElement("div"); renderFlowInto(live, proj, riders, true);
+    const withNotice = Array.from(live.children).filter(w => /data-save-hint=/.test(w.innerHTML));
+    assert(withNotice.length === 1 && withNotice[0].getAttribute("data-active") === "1", "interactive flow: one notice, on the active card, got " + withNotice.length + " on " + withNotice.map(w => w.getAttribute("data-node")).join(","));
+    assert(/MAKE A MANUAL SAVE/.test(withNotice[0].innerHTML) && withNotice[0].innerHTML.indexOf(esc(hr.sentence)) >= 0, "the notice shows its heading and sentence");
+    const history = document.createElement("div"); renderFlowInto(history, proj, riders, false);
+    assert(!Array.from(history.children).some(w => /data-save-hint=/.test(w.innerHTML)), "a non-interactive flow (history view) shows no notice");
+  }
+});
+
 /* G15 — regression for the defect found auditing Phase 3: a node granting two
    iconics must self-loop, or taking one advances past the other. */
 GOLDEN.push({
@@ -6425,6 +6494,33 @@ function spoilerMask(key, html, staticOnly) {
   return `<span role="button" tabindex="0" data-reveal="${esc(key)}" class="spoiler-chip">▓▓ spoiler — tap to reveal</span>`;
 }
 
+/* Phase 9 · P1 · 9.1c — the Save Suggester's notice on the active card (R-013). Plain categories only; no
+   item or ending names until P2 verifies the data. */
+const SAVE_REASON_TEXT = {
+  ponr: "is a point of no return", terminal: "locks in an ending", ending: "changes which endings you can get",
+  item: "can lose an item", questline: "can fail a questline", story: "changes the story", timer: "has a time limit"
+};
+const SAVE_REASON_ORDER = ["ponr", "terminal", "ending", "item", "questline", "story", "timer"];
+function saveHint(state, nodeId) {
+  const a = adviseFork(state);
+  if (!a || !a.consequential || a.node !== nodeId) return null;
+  const join = parts => parts.length < 2 ? parts.join("") : parts.slice(0, -1).join(", ") + " and " + parts[parts.length - 1];
+  const sb = questDB[nodeId] && questDB[nodeId].saveBefore;
+  // Shabab (9.1c review): when the only permanent options are routes into the Point of No Return (the hub's
+  // Embers exit) and nothing else here changes the story, name the route instead of "this choice".
+  const lossy = a.choices.filter(x => x.items.length || x.endings.length || x.botched.length);
+  const toPonr = x => { const c = lookupChoice(nodeId, x.id); return !!(c && c.next && questDB[c.next] && questDB[c.next].type === "PONR"); };
+  if (lossy.length && lossy.every(toPonr) && !a.reasons.includes("story")) {
+    const routeParts = [];
+    if (lossy.some(x => x.endings.length)) routeParts.push("change which endings you can get");
+    if (lossy.some(x => x.items.length)) routeParts.push("lose items");
+    if (lossy.some(x => x.botched.length)) routeParts.push("fail questlines");
+    return { reasons: a.reasons.slice(), sentence: "Going to the Point of No Return can " + join(routeParts) + ".", before: sb ? sb.text : null };
+  }
+  const parts = SAVE_REASON_ORDER.filter(r => a.reasons.includes(r)).map(r => SAVE_REASON_TEXT[r]);
+  return { reasons: a.reasons.slice(), sentence: "This choice " + join(parts) + ".", before: sb ? sb.text : null };
+}
+
 function renderFlowInto(container, proj, state, interactive) {
   container.innerHTML = "";
   proj.cards.forEach(card => {
@@ -6450,6 +6546,17 @@ function renderFlowInto(container, proj, state, interactive) {
           card.active && def.type !== "NEXUS HUB"
             ? spoilerMask(card.node + "|desc", esc(def.desc))
             : esc(def.desc)}</p>`;
+
+    if (card.active && interactive) {
+      const hint = saveHint(state, card.node);
+      if (hint) {
+        html += `<div data-save-hint="${esc(hint.reasons.join(" "))}" class="border border-cy/50 bg-cy/5 p-2 mb-3 text-[11px]">
+          <div class="text-cy">▣ MAKE A MANUAL SAVE</div>
+          <div class="text-slate-300">${esc(hint.sentence)}</div>
+          ${hint.before ? `<div data-save-before="1" class="text-neon mt-1">${esc(hint.before)}</div>` : ""}
+        </div>`;
+      }
+    }
 
     if (def.timer) {
       html += `<div class="border border-neon/40 bg-neon/5 p-2 mb-3 text-[11px]">
@@ -7402,6 +7509,26 @@ function layoutAudit() {
       add("L31", "Archived run cards keep ≥4.5:1 text contrast through their dimming", bad.length === 0, bad.length ? [...new Set(bad)].slice(0, 6).join(" · ") : cards.length + " archived card(s) checked"); }
   }
 
+  /* ── 9.0 (Phase 9 · 9.1c) ── */
+  // L20 — the Save Suggester notice, measured only while one is on screen: one per flow, on the ACTIVE card and no
+  // other, not collapsed, not clipped by its own box, not wider than its card (the sentence wraps). Whether it ends up
+  // under the sticky header after the app's own scroll is the browser leg's L20 scenario.
+  {
+    const notices = [...document.querySelectorAll("#flow [data-save-hint]")];
+    if (notices.length) {
+      const bad = [];
+      if (notices.length > 1) bad.push(notices.length + " notices");
+      notices.forEach(n => {
+        const card = n.closest("[data-node]"), r = n.getBoundingClientRect(), c = card && card.getBoundingClientRect();
+        if (!card || card.getAttribute("data-active") !== "1") bad.push("on " + (card ? card.getAttribute("data-node") : "no card") + ", not the active card");
+        if (r.height < 20) bad.push("collapsed " + Math.round(r.height) + "px");
+        if (n.scrollWidth > n.clientWidth + 1 || n.scrollHeight > n.clientHeight + 1) bad.push("clipped " + n.scrollWidth + "×" + n.scrollHeight + " in " + n.clientWidth + "×" + n.clientHeight);
+        if (c && (r.left < c.left - 1 || r.right > c.right + 1)) bad.push("wider than its card");
+      });
+      add("L20", "Save notice: one, on the active card, unclipped, inside its card", bad.length === 0, bad.length ? bad.join(" · ") : "1 notice, " + Math.round(notices[0].getBoundingClientRect().width) + "px wide");
+    }
+  }
+
   return out;
 }
 
@@ -7533,7 +7660,7 @@ function wireApp() {
   // D-35c: build stamp is SINGLE-SOURCE. Two hand-edited stamps diverged once
   // (setup badge stuck at 8.4 while the header said 8.5) — the deploy-staleness
   // check exists to catch stale builds, so the stamp itself must be un-forkable.
-  const BUILD_STAMP = "BUILD 8.9.5 · 2026-10-12";
+  const BUILD_STAMP = "BUILD 9.0 · 2026-10-13";
   document.getElementById("build-stamp").textContent = BUILD_STAMP;
   document.getElementById("build-stamp-setup").textContent = "v3.1 · " + BUILD_STAMP;
 
