@@ -733,7 +733,7 @@ setTimeout(function(){
   <div id="ponr-modal" class="hidden fixed inset-0 z-50 items-center justify-center bg-void/95 p-4">
     <div class="w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-pink/60 bg-panel clip-notch p-4 md:p-6">
       <h2 class="text-pink text-lg mb-1">⚠ POINT OF NO RETURN</h2>
-      <p class="text-xs text-slate-500 mb-4">Walking into Embers ends all side content. This manifest is generated live from your run — it is not a generic warning.</p>
+      <p class="text-xs text-slate-500 mb-4">Walking into Embers ends all side content for this run (after the credits, the post-credits save returns you to before Embers). This manifest is generated live from your run — it is not a generic warning.</p>
       <div id="ponr-body"></div>
       <div class="flex flex-col sm:flex-row gap-2 mt-4">
         <button id="ponr-confirm" class="bg-pink text-void px-4 py-2 text-sm font-bold">I understand — proceed</button>
@@ -1020,7 +1020,7 @@ const DB_ACT1 = {
     act: 1, type: "CRITICAL JUNCTURE", arc: null,
     desc: "Optional call to a Militech internal affairs agent before All Foods. Taking her credchip is what makes the four-way split at Royce possible.",
     timer: null, bug: null,
-    src: "Stout is optional; skipping her leads to the same Gilchrist promotion as any peaceful resolution.",
+    src: "Stout is optional, but skipping her always gives Gilchrist. She survives only if V met her, took her credchip and left the malware on it, did not warn Maelstrom, and the deal ends in a fight with Maelstrom (R-015).",
     choices: [
       { id: "c_pickup_stout_take", label: "Meet Stout. Take the Militech credchip.",
         next: "act1_pickup_shard",
@@ -1030,7 +1030,7 @@ const DB_ACT1 = {
       { id: "c_pickup_stout_refuse", label: "Meet Stout. Refuse the credchip.",
         next: "act1_pickup_allfoods",
         setWorld: { stout: "met", shard: "none" },
-        misses: "The shard routes at Royce — you will need your own €$10,000 or a firefight" },
+        misses: "The shard routes at Royce — you will need your own €$10,000 or a firefight — and Stout's survival: she needs her chip carried in with the malware on" },
 
       { id: "c_pickup_stout_skip", label: "Never call her. Walk in cold.",
         next: "act1_pickup_allfoods",
@@ -1050,12 +1050,13 @@ const DB_ACT1 = {
         attr: "INT / Breach Protocol",
         next: "act1_pickup_allfoods",
         setWorld: { shard: "clean" },
-        gains: "A shard Royce's scan will accept" },
+        gains: "A shard Royce's scan will accept",
+        misses: "Stout's survival — she needs the malware left on" },
 
       { id: "c_pickup_shard_leave", label: "Leave the malware on it. Let Militech have their tracker.",
         next: "act1_pickup_allfoods",
         setWorld: { shard: "infected" },
-        gains: "The only route that keeps Meredith Stout alive and in post" }
+        gains: "Needed to keep Meredith Stout in post, but not enough on its own: V must also not warn Royce, and the deal must end in a fight" }
     ]
   },
 
@@ -1103,7 +1104,7 @@ const DB_ACT1 = {
     act: 1, type: "CRITICAL JUNCTURE", arc: null,
     desc: "Four resolutions, and taking one closes the other three. Every peaceful outcome leaves Royce breathing, which closes Chaos for good and opens Doom Doom in its place.",
     timer: null, bug: null,
-    src: "Peaceful resolutions promote Gilchrist over Stout and void the Meredith romance. Only the malware-intact shard keeps Stout in post.",
+    src: "Peaceful resolutions promote Gilchrist over Stout and void the Meredith romance. Stout stays in post only if V met her, kept the malware on her shard, did not warn Royce, and the deal ends in a fight.",
     saveBefore: { // R-013: this card appears inside a no-save stretch, so "save now" may be too late
       text: "You may not be able to save inside All Foods. Your safe save is the one from before the intercom at the All Foods gate.",
       basis: ["B_act1.md#act1_pickup_royce"]
@@ -1124,7 +1125,7 @@ const DB_ACT1 = {
         requires: { world: { shard: "infected" } },
         blockedReason: "You have no malware-bearing shard. Take Stout's credchip and leave it unbreached.",
         setWorld: { royce: "dead" },
-        gains: "Chaos becomes lootable; Stout beats Gilchrist and Venus in Furs opens",
+        gains: "Chaos becomes lootable; Stout beats Gilchrist and Venus in Furs opens (provided V did not warn Royce)",
         misses: "Maelstrom goodwill and the Doom Doom route" },
 
       { id: "c_pickup_royce_cash", label: "\u201C€$10,000. Got the scratch right here.\u201D",
@@ -1139,7 +1140,7 @@ const DB_ACT1 = {
         attr: "BODY 6 (optional takedown)",
         next: "act1_pickup_chaos", mutex: "mtx_maelstrom",
         setWorld: { royce: "dead" },
-        gains: "Chaos becomes lootable; if Stout was met, she survives and Venus in Furs opens",
+        gains: "Chaos becomes lootable; if V met Stout and her shard still carries the malware, she survives and Venus in Furs opens",
         misses: "Maelstrom goodwill and the Doom Doom route" }
     ]
   },
@@ -1417,7 +1418,7 @@ const DB_ACT2 = {
     act: 2, type: "CRITICAL JUNCTURE", arc: "arc_takemura",
     desc: "The parade. Oda goes down at the end of the netrunner fight and Takemura calls asking you to spare him.",
     timer: null, bug: null,
-    src: "Sparing Oda has no story consequence beyond Smasher's commentary — except that a spared Oda appears in Totalimmortal, and only if Takemura also lives.",
+    src: "Sparing Oda has no story consequence beyond Smasher's commentary — except that a spared Oda appears in Totalimmortal, and only if Takemura also lives. Jinchu-Maru is looted from Oda after the fight, before either choice, so it is there on both branches — and it can be walked past.",
     choices: [
       { id: "c_pis_spare_oda", label: "Spare Oda. Leave him breathing.",
         next: "arc2_search_destroy",
@@ -1553,14 +1554,15 @@ const DB_ACT2 = {
   arc2_i_walk_the_line: {
     title: "I Walk the Line",
     act: 2, type: "CRITICAL JUNCTURE", arc: "arc_evelyn_spine",
-    desc: "The Grand Imperial Mall and the NetWatch agent. Placide's fate is settled here.",
-    timer: null, bug: null, src: null,
+    desc: "The Grand Imperial Mall and the NetWatch agent. This is where the NetWatch deal is made; Placide's fate is decided later, in Transmission.",
+    timer: null, bug: null,
+    src: "Placide is decided in Transmission; the NetWatch deal here sets it up. Betraying the Voodoo Boys forces a fight with them and Placide; siding with them lets V leave peacefully (or attack).",
     choices: [
-      { id: "c_iwtl_kill_placide", label: "Kill Placide.",
+      { id: "c_iwtl_kill_placide", label: "Take NetWatch's deal. Placide dies in the Transmission fight.",
         next: "arc2_transmission",
         setWorld: { placide: "dead" }, setJohnny: 3 },
 
-      { id: "c_iwtl_spare_placide", label: "Leave Placide alive.",
+      { id: "c_iwtl_spare_placide", label: "Side with the Voodoo Boys. Placide lives through Transmission.",
         next: "arc2_transmission",
         setWorld: { placide: "alive" } }
     ]
@@ -1789,9 +1791,9 @@ const DB_ACT2 = {
     act: 2, type: "CRITICAL JUNCTURE", arc: "arc_judy",
     desc: "The dive at the flooded town. Judy's questline is open to every V — this last step is where identity actually matters.",
     timer: null, bug: null,
-    src: "The romance requires a feminine body type AND a feminine voice. Everything before this point is available to any V.",
+    src: "The romance requires a feminine body type AND a feminine voice. Everything before this point is available to any V. Staying the night is not enough: the romance also needs \u201Cthe beginning of something amazing.\u201D at the pier the next morning.",
     choices: [
-      { id: "c_ps_romance", label: "Stay the night. \u201CThe beginning of something amazing.\u201D",
+      { id: "c_ps_romance", label: "Stay the night, then at the pier next morning: \u201CThe beginning of something amazing.\u201D",
         next: "act2_hub",
         requires: { identity: { bodyType: "fem", voice: "fem" }, romanceMin: { judy: 3 } },
         blockedReason: "Judy's romance requires a feminine body type AND a feminine voice. Her questline is still fully completable — take the platonic ending.",
@@ -1849,10 +1851,10 @@ const DB_ACT3 = {
     act: 2, type: "CRITICAL JUNCTURE", arc: "arc_river",
     desc: "Randy's braindance. This is the first place River's chain can be failed outright, and it is not signposted.",
     timer: null,
-    bug: "Failing to gather enough braindance evidence, or answering \u201CCount me out\u201D, silently prevents Following the River from ever firing.",
-    src: "Following the River requires enough braindance information AND answering \u201CDon't do it\u201D or \u201CWe both will\u201D at the end.",
+    bug: "Picking the wrong farm, or answering \u201CCount me out\u201D, silently prevents Following the River from ever firing.",
+    src: "Following the River requires choosing Edgewood (a guess works; enough braindance information is not required) AND answering \u201CDon't do it\u201D or \u201CWe both will\u201D at the end.",
     choices: [
-      { id: "c_rh_full_bd_commit", label: "Scan the full braindance, then \u201CWe both will.\u201D",
+      { id: "c_rh_full_bd_commit", label: "Pick Edgewood (scanned or guessed), then \u201CWe both will.\u201D",
         next: "arc3_river_following",
         setWorld: { randy: "found" }, setRomance: { river: 2 },
         gains: "Following the River unlocks" },
@@ -1869,9 +1871,9 @@ const DB_ACT3 = {
     act: 2, type: "CRITICAL JUNCTURE", arc: "arc_river",
     desc: "Dinner at Joss's, then the water tower. River's romance is gated on body type alone — voice is irrelevant.",
     timer: null, bug: null,
-    src: "River is available to a feminine body type regardless of voice.",
+    src: "River is available to a feminine body type regardless of voice. The water-tower kiss is not enough: the romance also needs \u201CI feel good around you.\u201D the next morning.",
     choices: [
-      { id: "c_rf_romance", label: "Take the kiss at the water tower.",
+      { id: "c_rf_romance", label: "Take the kiss at the water tower, then next morning: \u201CI feel good around you.\u201D",
         next: "act2_hub",
         requires: { identity: { bodyType: "fem" }, romanceMin: { river: 2 } },
         blockedReason: { identity: "River's romance requires a feminine body type. His questline still completes — take the friendship ending.",
@@ -2119,18 +2121,18 @@ const DB_ACT3 = {
     act: 2, type: "CRITICAL JUNCTURE", arc: "arc_pl",
     desc: "The single most consequential choice in the expansion. It decides who dies, which iconics exist, and which route to the cure remains open.",
     timer: null, bug: null,
-    src: "Siding with Reed costs Alex her life but opens the Hansen boss fight and its three iconics. Siding with Songbird keeps Alex alive and skips Hansen entirely.",
+    src: "Siding with Reed costs Alex her life but opens the Hansen boss fight and its three iconics. Siding with Songbird keeps Alex alive and skips Hansen entirely. Murphy's Law (from Murphy at the stadium market) is Songbird-path only, so the Reed path loses it.",
     choices: [
       { id: "c_plf_side_reed", label: "\u201COne more second…\u201D — side with Reed. Capture Songbird.",
         next: "arc3_pl_hansen", mutex: "mtx_pl_songbird",
         setWorld: { songbird: "captured", alex: "dead" },
         gains: "Hansen boss fight — Bald Eagle, Wild Dog and Fang",
-        misses: "Alex. Permanently." },
+        misses: "Alex. Permanently. And Murphy's Law, which is Songbird-path only." },
 
       { id: "c_plf_side_songbird", label: "\u201CI'm with you.\u201D — side with Songbird. Run for the exit.",
         next: "arc3_pl_killing_moon", mutex: "mtx_pl_songbird",
         setWorld: { songbird: "freed", alex: "alive", hansen: "alive" },
-        gains: "Alex survives",
+        gains: "Alex survives; Murphy's Law from Murphy at the stadium market (Songbird path only)",
         misses: "The Hansen fight and all three of its iconics — permanently" }
     ]
   },
@@ -2209,25 +2211,26 @@ const DB_ACT3 = {
       { id: "c_plkm_moon", label: "Carry her to the shuttle. Send her to the moon.",
         next: "act2_hub",
         setWorld: { songbird: "moon", reed: "dead" }, setDone: "arc_pl", setJohnny: 4,
-        gains: "Songbird escapes",
+        gains: "Songbird escapes; Reed dies, and his pistol Pariah is yours — only on this branch",
         misses: "The cure and the Tower ending — the game continues on base endings only" },
 
       { id: "c_plkm_surrender_cure", label: "Surrender her to Reed — and demand the cure for it.",
         next: "arc3_pl_cure_offer",
         setWorld: { songbird: "fia", reed: "alive" },
-        gains: "The NUSA cure stays on the table from the Songbird path too" },
+        gains: "The NUSA cure stays on the table from the Songbird path too",
+        misses: "Pariah — Reed's pistol only drops on the moon branch" },
 
       { id: "c_plkm_surrender_nothing", label: "Surrender her and ask for nothing.",
         next: "act2_hub",
         setWorld: { songbird: "fia", reed: "alive" }, setDone: "arc_pl",
-        misses: "The cure. Reed takes her and you get exactly what you asked for." }
+        misses: "The cure, and Pariah. Reed takes her and you get exactly what you asked for." }
     ]
   },
 
   arc3_pl_cure_offer: {
-    title: "Reed's Call — The NUSA Cure",
+    title: "Who Wants to Live Forever — The NUSA Cure",
     act: 3, type: "DLC FINALE", arc: "arc_pl",
-    desc: "Reed calls days later. Accepting is TERMINAL: it commits the run to the Tower ending and locks every base-game ending behind mtx_ending_terminal.",
+    desc: "Reed calls to say the surgery is ready, but the binding choice is made on the roof of Misty's Esoterica under a point-of-no-return warning, not on the call. Accepting is TERMINAL: it commits the run to the Tower ending and locks every base-game ending behind mtx_ending_terminal.",
     timer: null, bug: null,
     src: "Accepting the cure leads to Things Done Changed and The Tower. Refusing leaves the base endings intact.",
     choices: [
@@ -2255,15 +2258,15 @@ const DB_ENDGAME = {
   act3_ponr: {
     title: "Nocturne Op55N1 — Embers",
     act: 3, type: "PONR", arc: null,
-    desc: "The last checkpoint. Every unfinished arc and every iconic still sitting in the world closes the moment you walk in.",
+    desc: "The last checkpoint. Every unfinished arc and every iconic still sitting in the world closes for this run the moment you walk in.",
     timer: null,
     bug: "Nothing in the game inventories what you are about to lose. That is what the pre-flight manifest is for.",
-    src: "Meeting Hanako at Embers is the point of no return; side content cannot be resumed afterwards.",
+    src: "Meeting Hanako at Embers is the point of no return; side content is lost only within this run. After the credits, the post-credits save returns V to before Embers with side content open.",
     choices: [
       { id: "c_ponr_proceed", label: "Walk into Embers.",
         desc: "Opens the pre-flight manifest first. Nothing is committed until you confirm.",
         next: "act3_nocturne_rooftop", ponr: true,
-        misses: "Every pending iconic and unfinished arc listed in the manifest" }
+        misses: "Every pending iconic and unfinished arc listed in the manifest, for this run" }
     ]
   },
 
@@ -2515,7 +2518,7 @@ const arsenalRegistry = [
     node: "arc2_venus_in_furs", choice_id: "c_vif_take",
     fallback: null, recovery: "herold", recoveryVerified: true, requiresDLC: false,
     requires: { world: { stout: "survived" } }, gate: "act1_pickup_royce",
-    notes: "Venus in Furs only fires if Stout beat Gilchrist — which needs V to have met her AND Royce to have died in The Pickup." },
+    notes: "Venus in Furs only fires if Stout beat Gilchrist — which needs V to have met her, kept the malware on her shard, not warned Royce, and ended the deal in a fight (R-015)." },
 
   /* ── Phase 4 additions ── */
   { id: "itm_doom_doom", name: "Doom Doom", category: "weapon",
@@ -3107,12 +3110,15 @@ function deriveState(state) {
     });
   }
 
-  // Meredith Stout's fate is DERIVED, not written by a choice. She beats
-  // Gilchrist only if V met her AND Royce died — which is true on the infected
-  // shard route and on every route where V simply shoots him. Writing it at the
-  // Royce node hardcoded the wrong answer for the violence route.
+  // Meredith Stout's fate is DERIVED, not written by a choice. R-015 (D-50,
+  // superseding "Stout survives whenever Royce dies"): she beats Gilchrist only
+  // if V met her, carried her chip in with the malware still on it, and the deal
+  // ended in a fight (Royce dead). That holds on the infected-shard handover and
+  // on drawing a weapon with the infected shard in hand; a wiped shard or a
+  // refused chip gives Gilchrist even if Royce dies. Not warning Royce is the
+  // fourth condition; the warning is not a modelled choice, so the copy carries it.
   if (state.world.stout === "met" && state.world.royce) {
-    state.world.stout = state.world.royce === "dead" ? "survived" : "ousted";
+    state.world.stout = (state.world.royce === "dead" && state.world.shard === "infected") ? "survived" : "ousted";
   } else if (state.world.stout === "unmet" && state.world.royce) {
     state.world.stout = "ousted";
   }
@@ -3435,9 +3441,10 @@ function proveItemUnreachable(state, item, cone) {
     if (r.world) for (const [k, v] of Object.entries(r.world)) {
       if (state.world[k] === v) continue;
       if (k === "stout") {
-        // Derived key: survived ⇔ met ∧ royce dead. Only final states count.
+        // Derived key: survived ⇔ met ∧ shard infected ∧ royce dead (R-015). Only final states count.
         if (v === "survived" && (state.world.stout === "unmet" || state.world.stout === "ousted" ||
-            state.world.royce === "alive")) return "Stout was ousted — Venus in Furs will never fire.";
+            state.world.royce === "alive" || state.world.shard === "clean" || state.world.shard === "none"))
+          return "Stout was ousted — Venus in Furs will never fire.";
         continue;
       }
       const canWrite = [...cone].some(n => questDB[n].choices.some(c => c.setWorld && c.setWorld[k] === v));
@@ -3513,7 +3520,7 @@ function reachableFrom(state, opts) {
     const absorb = (r) => {
       if (!r) return;
       Object.entries(r.world || {}).forEach(([k, v]) => {
-        if (k === "stout" && v === "survived") { w.world.stout = "met"; w.world.royce = "dead"; }
+        if (k === "stout" && v === "survived") { w.world.stout = "met"; w.world.shard = "infected"; w.world.royce = "dead"; }
         else w.world[k] = v;
       });
       (r.arcs || []).forEach(a => w.arcs.add(a));
@@ -3914,7 +3921,7 @@ function openPonrModal(nodeId, choiceId) {
 
   let html = "";
   html += block(
-    `LOST PERMANENTLY — ${m.losing.length} iconic${m.losing.length === 1 ? "" : "s"}`,
+    `LOST FOR THIS RUN — ${m.losing.length} iconic${m.losing.length === 1 ? "" : "s"}`,
     "bad",
     m.losing.map(i => `${i.name} — ${i.where}`),
     "Nothing. Every reachable iconic is either taken or recoverable."
@@ -4871,11 +4878,12 @@ GOLDEN.push({
   }
 });
 
-/* G12 — regression for the defect found in QA review: Stout survives on ANY
-   route where Royce dies, not only the infected-shard one. */
+/* G12 — Stout's fate is derived from the whole Pickup, not written at Royce. Originally (QA review) it pinned
+   "survives on ANY route where Royce dies"; R-015 (D-50) superseded that: a refused chip gives Gilchrist even
+   when Royce is shot. The full route table is G48. */
 GOLDEN.push({
   id: "G12_stout_derivation",
-  desc: "Stout survives whenever Royce dies and she was met; ousted if he lives or she was never met",
+  desc: "Stout survives on the infected route; ousted if she refused the chip, if Royce lives, or if she was never met",
   run() {
     const toRoyce = (stoutChoice, shardChoice) => {
       const p = [P("act1_lifepath", "c_lifepath_streetkid"),
@@ -4888,8 +4896,8 @@ GOLDEN.push({
 
     const refusedThenShot = replay(FEM_V,
       toRoyce("c_pickup_stout_refuse", null).concat([P("act1_pickup_royce", "c_pickup_royce_violence")]));
-    assert(refusedThenShot.world.stout === "survived",
-      "refusing the chip then killing Royce must keep Stout in post, got " + refusedThenShot.world.stout);
+    assert(refusedThenShot.world.stout === "ousted",
+      "R-015: refusing the chip then killing Royce gives Gilchrist, got " + refusedThenShot.world.stout);
 
     const infected = replay(FEM_V,
       toRoyce("c_pickup_stout_take", "c_pickup_shard_leave").concat([P("act1_pickup_royce", "c_pickup_royce_infected")]));
@@ -4903,6 +4911,106 @@ GOLDEN.push({
       toRoyce("c_pickup_stout_skip", null).concat([P("act1_pickup_royce", "c_pickup_royce_violence")]));
     assert(neverMet.world.stout === "ousted",
       "killing Royce cannot save a Stout V never met, got " + neverMet.world.stout);
+  }
+});
+
+/* G48 — R-015 (D-50, RM-074/RM-043): the Stout rule over every legal Pickup route. She survives only if V met her,
+   took the chip, left the malware on, and the deal ended in a fight (Royce dead); skipping her always gives
+   Gilchrist. The rule was "met and Royce dead", which kept her alive on a wiped shard or a refused chip once Royce
+   was shot. Part 2: the engine's own proof knows the outcome as soon as the shard is decided, before Royce, so the
+   Telemetry and the Save Suggester stop showing Sir John as open on a run that has already lost him. */
+GOLDEN.push({
+  id: "G48_stout_rule_r015",
+  desc: "Stout survives iff met + chip + malware left on + Royce dies in a fight; every other Pickup route gives Gilchrist; Sir John's proof lands at the shard",
+  run() {
+    const head = [P("act1_lifepath", "c_lifepath_streetkid"), P("act1_the_ride", "c_ride_take_the_gig")];
+    const route = (stout, shard, royce) => {
+      const p = head.concat([P("act1_pickup_stout", stout)]);
+      if (shard) p.push(P("act1_pickup_shard", shard));
+      p.push(P("act1_pickup_allfoods", "c_pickup_allfoods_sitdown"));
+      if (royce) p.push(P("act1_pickup_royce", royce));
+      return p;
+    };
+    const venus = lookupChoice("act2_hub", "c_hub_venus");
+    const sirJohn = arsenalRegistry.find(i => i.id === "itm_sir_john");
+    const TABLE = [   // [stout, shard, royce, expected]
+      ["c_pickup_stout_take",   "c_pickup_shard_leave", "c_pickup_royce_infected", "survived"],
+      ["c_pickup_stout_take",   "c_pickup_shard_leave", "c_pickup_royce_violence", "survived"],
+      ["c_pickup_stout_take",   "c_pickup_shard_leave", "c_pickup_royce_cash",     "ousted"],
+      ["c_pickup_stout_take",   "c_pickup_shard_clean", "c_pickup_royce_clean",    "ousted"],
+      ["c_pickup_stout_take",   "c_pickup_shard_clean", "c_pickup_royce_violence", "ousted"],
+      ["c_pickup_stout_take",   "c_pickup_shard_clean", "c_pickup_royce_cash",     "ousted"],
+      ["c_pickup_stout_refuse", null,                   "c_pickup_royce_violence", "ousted"],
+      ["c_pickup_stout_refuse", null,                   "c_pickup_royce_cash",     "ousted"],
+      ["c_pickup_stout_skip",   null,                   "c_pickup_royce_violence", "ousted"],
+      ["c_pickup_stout_skip",   null,                   "c_pickup_royce_cash",     "ousted"]
+    ];
+    TABLE.forEach(([st, sh, ro, want]) => {
+      const tag = [st, sh, ro].filter(Boolean).join(" > ");
+      const path = route(st, sh, ro);
+      const pre = replay(FEM_V, path.slice(0, -1));
+      assert(choiceStatus(pre, lookupChoice("act1_pickup_royce", ro)).ok, tag + ": the Royce step must be legal");
+      const s = replay(FEM_V, path);
+      assert(s.world.stout === want, tag + ": Stout must be " + want + ", got " + s.world.stout);
+      assert(evaluateRequires(s, venus).ok === (want === "survived"), tag + ": Venus in Furs gate must follow Stout (" + want + ")");
+      const proof = proveItemUnreachable(s, sirJohn, graphCone(activeNode(s.pathHistory)));
+      assert(!!proof === (want !== "survived"), tag + ": Sir John proof must be " + (want === "survived" ? "absent" : "present") + ", got " + proof);
+    });
+    // Part 2 — decided at the shard, before Royce: a wiped shard, a refused chip or a skip is already proven lost; malware kept is not.
+    [["c_pickup_stout_take", "c_pickup_shard_clean", true], ["c_pickup_stout_refuse", null, true],
+     ["c_pickup_stout_skip", null, true], ["c_pickup_stout_take", "c_pickup_shard_leave", false]].forEach(([st, sh, lost]) => {
+      const s = replay(FEM_V, route(st, sh, null));
+      assert(activeNode(s.pathHistory) === "act1_pickup_royce", "part 2 must stand at Royce");
+      const proof = proveItemUnreachable(s, sirJohn, graphCone("act1_pickup_royce"));
+      assert(!!proof === lost, [st, sh].filter(Boolean).join(" > ") + ": Sir John must be " + (lost ? "proven lost" : "still open") + " before Royce, got " + proof);
+    });
+  }
+});
+
+/* G49 — R-015 wording: each of the 11 ratified corrections is on its card, and the superseded claim is gone. A pin per
+   claim (LC id) on the exact field that carries it; choice ids are unchanged (I4), so only text moved. A change to one
+   of these is a lore decision for Shabab, not a test fix. */
+GOLDEN.push({
+  id: "G49_r015_wording",
+  desc: "The 11 R-015 corrections are present on their cards and the old claims are absent",
+  run() {
+    const field = (node, choiceId, key) => {
+      const n = questDB[node]; assert(n, "missing node " + node);
+      const o = choiceId ? n.choices.find(c => c.id === choiceId) : n;
+      assert(o, "missing choice " + node + "/" + choiceId);
+      return String(o[key] == null ? "" : o[key]);
+    };
+    const PINS = [   // [claim, node, choiceId|null, key, must contain, must not contain|null]
+      ["LC-001", "act1_pickup_stout", null, "src", "skipping her always gives Gilchrist", "same Gilchrist promotion as any peaceful"],
+      ["LC-001", "act1_pickup_stout", null, "src", "did not warn Maelstrom", null],
+      ["LC-003", "act1_pickup_shard", "c_pickup_shard_leave", "gains", "not enough on its own", "The only route"],
+      ["LC-003", "act1_pickup_shard", "c_pickup_shard_leave", "gains", "must also not warn Royce", null],
+      ["LC-008", "arc2_play_it_safe", null, "src", "Jinchu-Maru is looted from Oda after the fight, before either choice", "Herold"],
+      ["LC-012", "arc2_i_walk_the_line", null, "desc", "decided later, in Transmission", "settled here"],
+      ["LC-012", "arc2_i_walk_the_line", "c_iwtl_kill_placide", "label", "NetWatch", null],
+      ["LC-024", "arc2_pyramid_song", "c_ps_romance", "label", "at the pier next morning", null],
+      ["LC-024", "arc2_pyramid_song", null, "src", "Staying the night is not enough", null],
+      ["LC-026", "arc3_river_hunt", null, "src", "choosing Edgewood (a guess works; enough braindance information is not required)", "requires enough braindance information"],
+      ["LC-026", "arc3_river_hunt", "c_rh_full_bd_commit", "label", "Pick Edgewood", "Scan the full braindance"],
+      ["LC-028", "arc3_river_following", "c_rf_romance", "label", "I feel good around you.", null],
+      ["LC-028", "arc3_river_following", null, "src", "The water-tower kiss is not enough", null],
+      ["LC-035", "act3_ponr", null, "src", "post-credits save returns V to before Embers", "cannot be resumed"],
+      ["LC-038", "arc3_pl_firestarter", "c_plf_side_songbird", "gains", "Murphy's Law", null],
+      ["LC-038", "arc3_pl_firestarter", "c_plf_side_reed", "misses", "Murphy's Law", null],
+      ["LC-043", "arc3_pl_killing_moon", "c_plkm_moon", "gains", "Reed dies, and his pistol Pariah", null],
+      ["LC-045", "arc3_pl_cure_offer", null, "desc", "roof of Misty's Esoterica under a point-of-no-return warning, not on the call", "autosave"],
+      ["LC-045", "arc3_pl_cure_offer", null, "title", "Who Wants to Live Forever", "Reed's Call"]
+    ];
+    PINS.forEach(([lc, node, cid, key, yes, no]) => {
+      const t = field(node, cid, key);
+      const where = lc + " " + node + (cid ? "/" + cid : "") + "." + key;
+      assert(t.includes(yes), where + " must say \"" + yes + "\", has: " + t);
+      if (no) assert(!t.includes(no), where + " must not say \"" + no + "\"");
+    });
+    const claims = new Set(PINS.map(p => p[0]));
+    assert(claims.size === 11, "G49 must pin all 11 R-015 claims, pins " + claims.size);
+    // The moon branch already killed Reed in world state; the ruling only added the words.
+    assert(lookupChoice("arc3_pl_killing_moon", "c_plkm_moon").setWorld.reed === "dead", "LC-043: the moon branch kills Reed");
   }
 });
 
@@ -7660,7 +7768,7 @@ function wireApp() {
   // D-35c: build stamp is SINGLE-SOURCE. Two hand-edited stamps diverged once
   // (setup badge stuck at 8.4 while the header said 8.5) — the deploy-staleness
   // check exists to catch stale builds, so the stamp itself must be un-forkable.
-  const BUILD_STAMP = "BUILD 9.0 · 2026-10-13";
+  const BUILD_STAMP = "BUILD 9.0.1 · 2026-10-17";
   document.getElementById("build-stamp").textContent = BUILD_STAMP;
   document.getElementById("build-stamp-setup").textContent = "v3.1 · " + BUILD_STAMP;
 
